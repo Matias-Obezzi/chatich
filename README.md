@@ -1,36 +1,123 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Chatich
 
-## Getting Started
+**Chatich** is an open-source web application for displaying live chat messages from Twitch, Kick, and YouTube channels. It is designed for stream overlays, OBS browser sources, and custom widgets, with real-time updates and flexible styling.
 
-First, run the development server:
+---
 
-```bash
+## 🚀 Getting Started
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) (v18 or newer recommended)
+- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
+
+### Installation
+
+Clone the repository and install dependencies:
+
+```sh
+git clone https://github.com/matias-obezzi/chatich.git
+cd chatich
+npm install
+# or
+yarn install
+```
+
+### Running the Application
+
+Start the development server:
+
+```sh
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Building for Production
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```sh
+npm run build
+npm run preview
+# or
+yarn build
+yarn preview
+```
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 🛠️ How to Contribute & Add Features
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+We welcome contributions! Here’s how you can help improve Chatich:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 1. Fork & Clone
 
-## Deploy on Vercel
+- Fork this repository.
+- Clone your fork to your local machine.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 2. Create a Feature Branch
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```sh
+git checkout -b feature/your-feature-name
+```
+
+### 3. Make Your Changes
+
+- Add new features, fix bugs, or improve documentation.
+- Follow the existing code style and structure.
+- If you add a new chat provider or feature, document it in the code and README.
+
+### 4. Test Your Changes
+
+- Run the application locally and verify your changes work as expected.
+- Add or update unit tests if applicable.
+
+### 5. Commit & Push
+
+```sh
+git add .
+git commit -m "Describe your changes"
+git push origin feature/your-feature-name
+```
+
+### 6. Create a Pull Request
+
+- Go to the GitHub page for your fork.
+- Click "Compare & pull request".
+- Describe your changes and submit the PR.
+
+---
+
+## 💡 Adding New Features
+
+- **New Chat Providers:**  
+  Add a new context/provider in `src/contexts/` and a new handler in the main page. Update the documentation and translations.
+- **Custom Styles:**  
+  Add new style keys to the `CustomStyles` type and update the documentation.
+- **Translations:**  
+  Add new languages to the `translations` object in documentation and UI components.
+- **UI Improvements:**  
+  Use [Tailwind CSS](https://tailwindcss.com/) for styling. Keep the UI responsive and accessible.
+
+---
+
+## 📚 Documentation
+
+- See the [Home page](src/pages/home.tsx) for usage and customization.
+- For questions or issues, please open an issue or discussion on GitHub.
+
+---
+
+## 📝 License
+
+MIT
+
+---
+
+## 🙏 Acknowledgements
+
+- [Next.js](https://nextjs.org/) for the React framework
+- [React](https://react.dev/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [tmi.js](https://tmijs.com/) for Twitch chat integration
