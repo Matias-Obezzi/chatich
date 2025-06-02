@@ -15,11 +15,11 @@ export const YoutubeContextProvider = ({ children }: { children: React.ReactNode
   const { addMessage } = useContext(MessagesContext);
   const [channel, setChannel] = useState<string>();
   const [loading, setLoading] = useState(true);
-  const [messagesToIgnore, setMessagesToIgnore] = useState<number[]>([]);
 
   useEffect(() => {
     const channel = new URLSearchParams(window.location.search).get("youtube");
     if (!channel) {
+      setLoading(false);
       return;
     }
     setChannel(channel);
@@ -74,26 +74,22 @@ export const YoutubeContextProvider = ({ children }: { children: React.ReactNode
           const username = item.authorName?.simpleText || item.authorName?.runs?.[0]?.text || "Unknown";
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const message = item.message?.simpleText || item.message?.runs?.map((run: any) => run.text).join("") || "";
-          const hash = stringToHash(username + message + channel)
-          if (loading) {
-            setMessagesToIgnore(prev => [...prev, hash]);
-            return;
-          }
-          if (messagesToIgnore.includes(hash)) {
-            return; // Ignore this message
-          }
           addMessage({
             platform: "youtube",
             channel,
             username,
             content: message,
-            hash,
+            hash: stringToHash(username + message + channel),
             timestamp: Date.now()
           });
         }
       }
     });
     setLoading(false);
+  }
+
+  if (loading) {
+    return <div>Loading youtube client...</div>;
   }
 
   if (!channel) {
