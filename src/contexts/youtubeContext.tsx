@@ -34,7 +34,7 @@ export const YoutubeContextProvider = ({ children }: { children: React.ReactNode
   }, []);
 
   const load = async (channel: string) => {
-    const response = await fetch(`${process.env.NODE_ENV == "development" ? "http://localhost:3000" : "https://chatich.vercel.app"}/api/youtube/${channel}`);
+    const response = await fetch(`${process.env.NODE_ENV == "development" ? "http://localhost:3000" : "https://chatich.vercel.app"}/api/youtube/${channel}`, { cache: "no-cache" });
     if (!response.ok) {
       return;
     }
