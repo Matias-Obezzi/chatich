@@ -1,7 +1,7 @@
 "use client";
 import { useContext, useEffect, useState } from 'react'
-import { MessagesContext } from '../contexts/messagesContext';
-import { Message } from '../component/message';
+import { MessagesContext } from '@/contexts/messagesContext';
+import { Message } from '@/component/chat/message';
 
 export type CustomStyles = Partial<{
   'username-color': string;
@@ -35,7 +35,7 @@ export type CustomStyles = Partial<{
   'row-white-space': string;
 }>
 
-function ChannelPage() {
+export const ChatViewClient = () => {
   const { messages } = useContext(MessagesContext);
   const [styles, setStyles] = useState<{ [key: string]: string }>({});
 
@@ -69,6 +69,4 @@ function ChannelPage() {
     </div>
   )
 }
-
-export default ChannelPage
 

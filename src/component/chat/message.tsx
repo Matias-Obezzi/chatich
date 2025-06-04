@@ -1,9 +1,9 @@
-import type { KickMessageType } from "../contexts/kickContext";
-import type { Message } from "../contexts/messagesContext";
-import type { TwitchMessageType } from "../contexts/tmiContext";
-import type { YoutubeMessageType } from "../contexts/youtubeContext";
-import { hexToRgb } from "../lib/colots";
-import type { CustomStyles } from "../pages/channel";
+import type { KickMessageType } from "@/contexts/kickContext";
+import type { Message } from "@/contexts/messagesContext";
+import type { TwitchMessageType } from "@/contexts/tmiContext";
+import type { YoutubeMessageType } from "@/contexts/youtubeContext";
+import { hexToRgb } from "@/lib/colots";
+import type { CustomStyles } from "./index";
 
 export function Message({ message, styles }: { message: Message, styles: CustomStyles }) {
   if (message.platform === 'twitch') {
