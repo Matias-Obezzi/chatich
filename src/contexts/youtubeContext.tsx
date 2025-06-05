@@ -2,20 +2,14 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { MessagesContext } from "./messagesContext";
 import { stringToHash } from "../lib/hash";
-import { YoutubeMessageType } from "@/app/api/youtube/[id]/chat/route";
 import { YoutubeDataType } from "@/app/api/youtube/[id]/data/route";
+import { YoutubeMessageType } from "@/type";
 
 export type YoutubeContextType = {
-  data: YoutubeDataType;
+  data?: YoutubeDataType;
 }
 
 export const YoutubeContext = createContext<YoutubeContextType>({
-  data: {
-    followers: "0",
-    views: "0",
-    title: "No title",
-    description: "No description"
-  }
 });
 
 export const YoutubeContextProvider = ({ children, isChat = false, isData = false }: { children: React.ReactNode, isChat: boolean, isData: boolean }) => {
@@ -57,7 +51,9 @@ export const YoutubeContextProvider = ({ children, isChat = false, isData = fals
     }
 
     return () => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       dataInterval && clearInterval(dataInterval);
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       chatInterval && clearInterval(chatInterval);
     }
   }, []);
@@ -83,7 +79,7 @@ export const YoutubeContextProvider = ({ children, isChat = false, isData = fals
         platform: "youtube",
         channel,
         username,
-        content: message,
+        message,
         hash: stringToHash(username + message + channel),
         timestamp: Date.now()
       });

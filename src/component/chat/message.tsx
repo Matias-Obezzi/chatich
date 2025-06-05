@@ -1,9 +1,7 @@
-import type { KickMessageType } from "@/contexts/kickContext";
 import type { Message } from "@/contexts/messagesContext";
-import type { TwitchMessageType } from "@/contexts/tmiContext";
-import type { YoutubeMessageType } from "@/contexts/youtubeContext";
 import { hexToRgb } from "@/lib/colots";
 import type { CustomStyles } from "./index";
+import { KickMessageType, TwitchMessageType, YoutubeMessageType } from "@/type";
 
 export function Message({ message, styles }: { message: Message, styles: CustomStyles }) {
   if (message.platform === 'twitch') {
@@ -52,7 +50,7 @@ function YoutubeMessage({ message, styles }: { message: YoutubeMessageType, styl
       message={{
         username: message.username,
         color: undefined, // YouTube messages don't have a color
-        message: message.content,
+        message: message.message,
         platform: 'youtube',
       }}
       styles={styles}

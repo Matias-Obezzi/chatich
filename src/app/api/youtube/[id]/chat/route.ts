@@ -1,12 +1,6 @@
 import { getYtInitialDataContent } from "@/lib/youtube";
-import { JSDOM } from "jsdom";
+import { YoutubeMessageType } from "@/type";
 import { NextResponse } from "next/server";
-
-export type YoutubeMessageType = {
-  username: string;
-  message: string;
-  channel: string;
-}
 
 export const GET = async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;

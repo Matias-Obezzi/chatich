@@ -1,8 +1,6 @@
 "use client";
+import { KickMessageType, TwitchMessageType, YoutubeMessageType } from "@/type";
 import { createContext, useState } from "react";
-import type { TwitchMessageType } from "./tmiContext";
-import type { KickMessageType } from "./kickContext";
-import type { YoutubeMessageType } from "./youtubeContext";
 
 export type MessagePlatform = 'twitch' | 'youtube' | 'kick';
 

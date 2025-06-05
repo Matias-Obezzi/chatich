@@ -4,12 +4,6 @@ import tmi from 'tmi.js'
 import { MessagesContext } from "./messagesContext";
 import { stringToHash } from "../lib/hash";
 
-export type TwitchMessageType = {
-  userstate: tmi.ChatUserstate;
-  message: string;
-  channel: string;
-}
-
 export type TmiContextType = {
   tmiClient: tmi.Client;
 }

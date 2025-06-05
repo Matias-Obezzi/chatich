@@ -5,12 +5,6 @@ import type { MessageData } from "../lib/kickChat/types";
 import { MessagesContext } from "./messagesContext";
 import { stringToHash } from "../lib/hash";
 
-export type KickMessageType = {
-  sender: MessageData['sender'];
-  message: string;
-  channel: string;
-}
-
 export type KickContextType = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   kickClient: any;

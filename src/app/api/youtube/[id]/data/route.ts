@@ -1,5 +1,4 @@
 import { getYtInitialDataContent } from "@/lib/youtube";
-import { JSDOM } from "jsdom";
 import { NextResponse } from "next/server";
 
 export type YoutubeDataType = {
@@ -17,7 +16,9 @@ export const GET = async (request: Request, { params }: { params: Promise<{ id: 
     console.error("No contents found in ytInitialData");
     return new Response("Failed to load YouTube data", { status: 500 });
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const videoPrimaryInfo = contents.find((c: any) => c.videoPrimaryInfoRenderer);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const videoSecondaryInfo = contents.find((c: any) => c.videoSecondaryInfoRenderer);
   const title = videoPrimaryInfo.videoPrimaryInfoRenderer.title.runs[0].text;
   const liveViewCount = videoPrimaryInfo.videoPrimaryInfoRenderer.viewCount.videoViewCountRenderer.viewCount.runs[0].text;

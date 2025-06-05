@@ -1,5 +1,6 @@
 import { JSDOM } from "jsdom";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const parseYtInitialData = (text: string): any => {
   let match = text.match(/window\["ytInitialData"\]\s*=\s*(\{.*?\});/)?.[0];
   if (match) {
@@ -12,6 +13,7 @@ const parseYtInitialData = (text: string): any => {
   return {};
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getYtInitialDataContent = async (url: string, headers: Headers): Promise<any> => {
   const response = await fetch(url, {
     cache: "no-cache",
