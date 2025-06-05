@@ -26,7 +26,7 @@ export default async function Chat() {
   }
   return [MessagesContextProvider, ...providers].reduceRight(
     (children, Provider) => (
-      <Provider>
+      <Provider {...({ isChat: true })}>
         {children}
       </Provider>
     ),

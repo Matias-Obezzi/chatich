@@ -2,88 +2,91 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { MessagesContext } from "./messagesContext";
 import { stringToHash } from "../lib/hash";
+import { YoutubeMessageType } from "@/app/api/youtube/[id]/chat/route";
+import { YoutubeDataType } from "@/app/api/youtube/[id]/data/route";
 
-export type YoutubeMessageType = {
-  username: string;
-  content: string;
-  channel: string;
+export type YoutubeContextType = {
+  data: YoutubeDataType;
 }
 
-export const YoutubeContext = createContext<unknown>({});
+export const YoutubeContext = createContext<YoutubeContextType>({
+  data: {
+    followers: "0",
+    views: "0",
+    title: "No title",
+    description: "No description"
+  }
+});
 
-export const YoutubeContextProvider = ({ children }: { children: React.ReactNode }) => {
+export const YoutubeContextProvider = ({ children, isChat = false, isData = false }: { children: React.ReactNode, isChat: boolean, isData: boolean }) => {
   const { addMessage } = useContext(MessagesContext);
   const [channel, setChannel] = useState<string>();
   const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<YoutubeDataType>();
 
   useEffect(() => {
     const channel = new URLSearchParams(window.location.search).get("youtube");
-    if (!channel) {
+    if (!channel || (!isChat && !isData)) {
       setLoading(false);
       return;
     }
     setChannel(channel);
-    const interval = setInterval(() => {
-      load(channel)
-    }, 1000); // 72,000 ms = 72 seconds
-    load(channel)
+
+    let dataInterval: NodeJS.Timeout | undefined;
+    let chatInterval: NodeJS.Timeout | undefined;
+
+    if (isData) {
+      dataInterval = setInterval(() => {
+        loadData(channel).catch((error) => {
+          console.error("Failed to load YouTube data:", error);
+          clearInterval(chatInterval);
+          alert("Failed to load YouTube data. Please try again later.");
+        });
+      }, 5000);
+      loadData(channel)
+    }
+    if (isChat) {
+      chatInterval = setInterval(() => {
+        loadChat(channel).catch((error) => {
+          console.error("Failed to load YouTube chat:", error);
+          clearInterval(chatInterval);
+          alert("Failed to load YouTube chat. Please try again later.");
+        });
+      }, 1000);
+      loadChat(channel)
+    }
 
     return () => {
-      clearInterval(interval);
+      dataInterval && clearInterval(dataInterval);
+      chatInterval && clearInterval(chatInterval);
     }
   }, []);
 
-  const load = async (channel: string) => {
-    const response = await fetch(`${process.env.NODE_ENV == "development" ? "http://localhost:3000" : "https://chatich.vercel.app"}/api/youtube/${channel}`, { cache: "no-cache" });
+  const loadData = async (channel: string) => {
+    const response = await fetch(`/api/youtube/${channel}/data`, { cache: "no-cache" });
     if (!response.ok) {
-      return;
+      throw new Error("Failed to fetch YouTube data");
     }
-    const responseText = await response.text();
-    const parser = new DOMParser();
-    const document = parser.parseFromString(responseText, "text/html");
-    if (!document) {
-      console.error("Failed to access iframe document");
-      return;
+    const data = (await response.json()).data as YoutubeDataType;
+    setData(data);
+    setLoading(false);
+  }
+
+  const loadChat = async (channel: string) => {
+    const response = await fetch(`/api/youtube/${channel}/chat`, { cache: "no-cache" });
+    if (!response.ok) {
+      throw new Error("Failed to fetch YouTube chat");
     }
-    const ytInitialData = [...document.querySelectorAll("script")].filter(el => el.textContent?.includes("ytInitialData"))?.[0]?.textContent;
-    if (!ytInitialData) {
-      console.error("Failed to find ytInitialData in the document");
-      return;
-    }
-    const match = ytInitialData.match(/window\["ytInitialData"\]\s*=\s*(\{.*?\});/)?.[0];
-    const data = JSON.parse(match?.replace(/window\["ytInitialData"\]\s*=\s*/, "").replace(";", "") || "{}");
-    if (!data) {
-      console.error("Failed to parse ytInitialData");
-      return;
-    }
-    if (!data || !data.contents || !data.contents.liveChatRenderer) {
-      console.error("Invalid ytInitialData structure", data);
-      return;
-    }
-    const liveChat = data.contents.liveChatRenderer;
-    if (!liveChat || !liveChat.actions) {
-      console.error("No live chat actions found in ytInitialData");
-      return;
-    }
-    
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    liveChat.actions.forEach((action: any) => {
-      if (action.addChatItemAction && action.addChatItemAction.item) {
-        const item = action.addChatItemAction.item.liveChatTextMessageRenderer;
-        if (item) {
-          const username = item.authorName?.simpleText || item.authorName?.runs?.[0]?.text || "Unknown";
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const message = item.message?.simpleText || item.message?.runs?.map((run: any) => run.text).join("") || "";
-          addMessage({
-            platform: "youtube",
-            channel,
-            username,
-            content: message,
-            hash: stringToHash(username + message + channel),
-            timestamp: Date.now()
-          });
-        }
-      }
+    const messages = (await response.json()).messages as YoutubeMessageType[];
+    messages.forEach(({ username, message, channel }) => {
+      addMessage({
+        platform: "youtube",
+        channel,
+        username,
+        content: message,
+        hash: stringToHash(username + message + channel),
+        timestamp: Date.now()
+      });
     });
     setLoading(false);
   }
@@ -97,7 +100,7 @@ export const YoutubeContextProvider = ({ children }: { children: React.ReactNode
   }
 
   return (
-    <YoutubeContext.Provider value={{}}>
+    <YoutubeContext.Provider value={{ data }}>
       {children}
     </YoutubeContext.Provider>
   );
