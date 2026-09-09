@@ -16,9 +16,33 @@ export default async function middleware(request: NextRequest) {
   response.headers.set("x-url", request.url);
   response.headers.set("x-pathname", request.nextUrl.pathname);
   response.headers.set("x-search", request.nextUrl.search);
-  const lang = new URLSearchParams(request.nextUrl.search || '').get('lang') || request.headers.get("accept-language")?.split(",")[0]?.split("-")[0] || "en";
   const allowedLangs = ["en", "es", "pt"];
-  response.headers.set("x-lang", allowedLangs.includes(lang) ? lang : "en");
+  const explicitLang = request.nextUrl.searchParams.get("lang");
+  
+  let lang = "en";
+  if (explicitLang && allowedLangs.includes(explicitLang)) {
+    lang = explicitLang;
+  } else {
+    const acceptLanguage = request.headers.get("accept-language");
+    if (acceptLanguage) {
+      const parsedLangs = acceptLanguage
+        .split(",")
+        .map((l) => {
+          const [locale, qValue] = l.split(";");
+          const q = qValue && qValue.trim().startsWith("q=") ? parseFloat(qValue.trim().slice(2)) : 1;
+          const code = locale.trim().substring(0, 2).toLowerCase();
+          return { code, q: isNaN(q) ? 1 : q };
+        })
+        .sort((a, b) => b.q - a.q);
+        
+      const detected = parsedLangs.find((l) => allowedLangs.includes(l.code));
+      if (detected) {
+        lang = detected.code;
+      }
+    }
+  }
+
+  response.headers.set("x-lang", lang);
 
   return response;
 }

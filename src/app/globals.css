@@ -1,2 +1,49 @@
 @import "tailwindcss";
 @plugin '@tailwindcss/typography';
+
+@theme {
+  --color-bg: var(--bg);
+  --color-bg-2: var(--bg-2);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-neon: var(--neon);
+  --color-neon-2: var(--neon-2);
+  --color-neon-3: var(--neon-3);
+
+  /* Alias de los tokens que usan los componentes de shadcn/uiness (ej: el Drawer),
+     mapeados al theme propio para que hereden el look del sitio. */
+  --color-background: var(--surface);
+  --color-foreground: var(--text);
+  --color-muted-foreground: var(--muted);
+  --color-ring: var(--neon);
+  --color-twitch: var(--twitch);
+  --color-kick: var(--kick);
+  --color-youtube: var(--youtube);
+  --radius-lg: var(--radius);
+  --font-chakra: var(--font-chakra);
+  --font-inter: var(--font-inter);
+  --font-mono: var(--font-mono);
+}
+
+@layer base {
+  :root {
+    --bg:#06060B; --bg-2:#0B0B14; --surface:#12121D; --surface-2:#1A1A2B;
+    --border:rgba(255,255,255,.09); --text:#EDEDF5; --muted:#8E8EA8;
+    --neon:#8B5CF6; --neon-2:#22D3EE; --neon-3:#53FC18;
+    --twitch:#9146FF; --kick:#53FC18; --youtube:#FF0033;
+    --radius:14px;
+    
+    --toast-bg: var(--surface-2);
+    --toast-color: var(--text);
+    --toast-border: var(--border);
+    
+    --island-bg: var(--surface-2);
+    --island-color: var(--text);
+    --island-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    --island-accent: var(--neon);
+    --island-muted: var(--surface);
+  }
+}

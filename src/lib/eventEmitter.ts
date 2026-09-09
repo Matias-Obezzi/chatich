@@ -5,6 +5,14 @@ export class EventEmitter {
   on(event: string, listener: (...args: any[]) => void) {
     if (!this.events[event]) this.events[event] = [];
     this.events[event].push(listener);
+    return () => {
+      this.off(event, listener);
+    };
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  off(event: string, listener: (...args: any[]) => void) {
+    if (!this.events[event]) return;
+    this.events[event] = this.events[event].filter(l => l !== listener);
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   emit(event: string, ...args: any[]) {

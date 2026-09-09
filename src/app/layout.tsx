@@ -1,6 +1,23 @@
 import type { Metadata } from "next";
 import { getUserLanguage } from "@/lib/userLanguage";
+import { Chakra_Petch, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+
+const chakra = Chakra_Petch({
+  weight: ['300', '400', '500', '600', '700'],
+  subsets: ['latin'],
+  variable: '--font-chakra',
+});
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+});
+
+const mono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-mono',
+});
 
 export const metadata: Metadata = {
   title: "Chatich",
@@ -47,8 +64,8 @@ export default async function RootLayout({
 }>) {
   const lang = await getUserLanguage()
   return (
-    <html lang={lang} className="bg-transparent">
-      <body className="antialiased bg-transparent">
+    <html lang={lang} className={`bg-transparent ${chakra.variable} ${inter.variable} ${mono.variable}`}>
+      <body className="antialiased bg-transparent font-inter text-text">
         {children}
       </body>
     </html>

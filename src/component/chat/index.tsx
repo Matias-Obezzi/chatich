@@ -1,7 +1,9 @@
 "use client";
-import { useContext, useEffect, useState } from 'react'
-import { MessagesContext } from '@/contexts/messagesContext';
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation';
+import { useStream } from '@/contexts/streamContext';
 import { Message } from '@/component/chat/message';
+import { AnimatePresence } from 'framer-motion';
 
 export type CustomStyles = Partial<{
   'username-color': string;
@@ -36,21 +38,29 @@ export type CustomStyles = Partial<{
 }>
 
 export const ChatViewClient = () => {
-  const { messages } = useContext(MessagesContext);
+  const { messages } = useStream();
+  const searchParams = useSearchParams();
   const [styles, setStyles] = useState<{ [key: string]: string }>({});
+  
+  const layout = searchParams.get('layout') === 'vertical' ? 'vertical' : 'horizontal';
+  const ttlParam = searchParams.get('ttl');
+  const ttl = ttlParam ? parseInt(ttlParam, 10) : undefined;
 
   useEffect(() => {
-    const queryParams = new URLSearchParams(window.location.search);
-    const styles = queryParams.get('styles');
-    if (styles) {
-      const styleObject = JSON.parse(styles) as CustomStyles;
-      setStyles(styleObject);
+    const stylesParam = searchParams.get('styles');
+    if (stylesParam) {
+      try {
+        const styleObject = JSON.parse(stylesParam) as CustomStyles;
+        setStyles(styleObject);
+      } catch (e) {
+        console.error("Failed to parse styles", e);
+      }
     }
-  }, []);
+  }, [searchParams]);
 
   return (
     <div
-      className="flex flex-row items-center justify-end w-screen gap-4 p-4 wrapper"
+      className={`flex ${layout === 'vertical' ? 'flex-col justify-end items-start' : 'flex-row items-end justify-end'} w-screen h-screen overflow-hidden gap-4 p-4 wrapper`}
       style={{
         background: styles['row-background'],
         padding: styles['row-padding'],
@@ -62,11 +72,12 @@ export const ChatViewClient = () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         textOverflow: styles['row-text-overflow'] as any || 'clip',
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        whiteSpace: styles['row-white-space'] as any || 'nowrap',
+        whiteSpace: styles['row-white-space'] as any || (layout === 'vertical' ? 'normal' : 'nowrap'),
       }}
     >
-      {messages.map((msg, index) => <Message message={msg} key={index} styles={styles} />)}
+      <AnimatePresence mode="popLayout">
+        {messages.map((msg) => <Message message={msg} key={msg.id} styles={styles} layout={layout} ttl={ttl} />)}
+      </AnimatePresence>
     </div>
   )
 }
-
