@@ -3,17 +3,20 @@ import { motion } from "framer-motion";
 import { ChatMessageEvent } from "@/lib/events/types";
 import { hexToRgb } from "@/lib/colots";
 import type { CustomStyles } from "./index";
+import { themeSurface, type OverlayTheme } from "@/component/overlays/ui";
 
 export function Message({
   message,
   styles,
   layout,
   ttl,
+  theme,
 }: {
   message: ChatMessageEvent;
   styles: CustomStyles;
   layout?: "horizontal" | "vertical";
   ttl?: number;
+  theme?: OverlayTheme;
 }) {
   const [visible, setVisible] = useState(true);
 
@@ -36,6 +39,7 @@ export function Message({
       }}
       styles={styles}
       layout={layout}
+      theme={theme}
     />
   );
 }
@@ -44,6 +48,7 @@ const DefaultMessage = ({
   message,
   styles,
   layout,
+  theme = "glass",
 }: {
   message: {
     username: string;
@@ -53,6 +58,7 @@ const DefaultMessage = ({
   };
   styles: CustomStyles;
   layout?: "horizontal" | "vertical";
+  theme?: OverlayTheme;
 }) => {
   const PLATFORM_ICONS: Record<string, string> = {
     twitch: "/twitch.png",
@@ -74,7 +80,7 @@ const DefaultMessage = ({
     : platformColor;
 
   const defaultBackground = "rgba(18, 18, 29, 0.85)";
-  const hasCustomBg = !!styles["message-background"];
+  const surface = themeSurface(theme);
   const hasCustomTextShadow = !!styles["message-text-shadow"];
 
   return (
@@ -89,10 +95,10 @@ const DefaultMessage = ({
       }`}
       style={{
         background: styles["message-background"] || defaultBackground,
-        backdropFilter: hasCustomBg ? undefined : "blur(8px)",
-        border: hasCustomBg ? undefined : `1px solid rgba(255,255,255,0.08)`,
-        borderLeft: hasCustomBg ? undefined : `3px solid ${userColor}`,
-        boxShadow: styles["message-box-shadow"] || (hasCustomBg ? undefined : "0 4px 12px rgba(0, 0, 0, 0.5)"),
+        backdropFilter: surface.style.backdropFilter,
+        border: surface.style.border,
+        borderLeft: `3px solid ${userColor}`,
+        boxShadow: styles["message-box-shadow"] || surface.style.boxShadow,
         color: styles["message-color"] || "var(--text, #EDEDF5)",
         fontWeight: styles["message-font-weight"] || "500",
         fontSize: styles["message-font-size"] || "0.95rem",

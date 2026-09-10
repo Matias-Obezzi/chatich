@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Overlays de Música - Diseño y Producto</title>
+<style>
+:root{--bg:#08080f;--surface:#12121c;--surface-2:#1a1a28;--border:rgba(255,255,255,.08);--text:#ECECF1;--muted:#9A9AB0;--accent:#7C5CFF;--twitch:#9146FF;--kick:#53FC18;--youtube:#FF0033;--spotify:#1DB954;--apple:#FC3C44;--radius:14px;--font:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;--mono:ui-monospace,'Cascadia Code','Fira Code',monospace}
+body { background: var(--bg); color: var(--text); font-family: var(--font); margin: 0; padding: 0; line-height: 1.6; }
+h1, h2, h3 { font-weight: 600; margin-top: 2rem; color: #fff; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.container { max-width: 1000px; margin: 0 auto; padding: 2rem; }
+nav { position: sticky; top: 0; background: rgba(8, 8, 15, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 1rem 0; z-index: 100; }
+nav ul { list-style: none; padding: 0; margin: 0; display: flex; gap: 1.5rem; justify-content: center; }
+nav a { color: var(--muted); font-size: 0.9rem; font-weight: 500; transition: color 0.2s; }
+nav a:hover { color: var(--text); text-decoration: none; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+code { font-family: var(--mono); background: var(--surface-2); padding: 0.2rem 0.4rem; border-radius: 4px; font-size: 0.85em; color: #a5d6ff; }
+pre code { display: block; padding: 1rem; overflow-x: auto; background: var(--bg); border: 1px solid var(--border); color: #c9d1d9; }
+table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+th, td { text-align: left; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); }
+th { background: var(--surface-2); color: var(--muted); font-weight: 500; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.badge { display: inline-block; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+.badge.low { background: rgba(83, 252, 24, 0.1); color: var(--kick); }
+.badge.medium { background: rgba(255, 165, 0, 0.1); color: orange; }
+.badge.high { background: rgba(255, 0, 51, 0.1); color: var(--youtube); }
+
+/* Controles de galería */
+.controls { display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center; flex-wrap: wrap; }
+.controls select, .controls input[type="color"], .controls button { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem; font-family: inherit; font-size: 0.9rem; cursor: pointer; }
+.controls button:hover { background: var(--border); }
+
+/* Estilos base de widgets */
+.widget-container { position: relative; padding: 2rem; background: #000; border-radius: var(--radius); overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 250px; border: 1px dashed var(--border); }
+.widget { transition: all 0.3s ease; position: relative; font-family: var(--font); box-sizing: border-box; }
+.widget * { box-sizing: border-box; }
+.widget.theme-light { background: #fff; color: #111; }
+.widget.theme-dark { background: #18181b; color: #fff; }
+
+/* Animaciones */
+@keyframes spin { 100% { transform: rotate(360deg); } }
+@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+
+/* A: Compact Horizontal */
+.w-compact { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; width: 320px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); overflow: hidden; }
+.w-compact .cover { width: 48px; height: 48px; border-radius: 6px; background: linear-gradient(45deg, var(--w-accent, var(--accent)), #2a2a40); flex-shrink: 0; }
+.w-compact .info { flex-grow: 1; min-width: 0; }
+.w-compact .title { font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0 0 2px 0; }
+.w-compact .artist { font-size: 0.8rem; opacity: 0.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; }
+.w-compact .progress-bg { height: 4px; background: rgba(128,128,128,0.3); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+.w-compact .progress-bar { height: 100%; background: var(--w-accent, var(--accent)); width: 0%; transition: width 0.1s linear; }
+
+/* B: Vertical Card */
+.w-card { display: flex; flex-direction: column; padding: 20px; border-radius: 24px; width: 280px; box-shadow: 0 16px 48px rgba(0,0,0,0.6); }
+.w-card .cover { width: 100%; aspect-ratio: 1; border-radius: 16px; background: linear-gradient(135deg, #444, var(--w-accent, var(--accent))); margin-bottom: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+.w-card .title { font-weight: 700; font-size: 1.2rem; margin: 0 0 4px 0; text-align: center; }
+.w-card .artist { font-size: 0.9rem; opacity: 0.7; margin: 0 0 16px 0; text-align: center; }
+.w-card .times { display: flex; justify-content: space-between; font-size: 0.7rem; opacity: 0.6; margin-top: 8px; font-variant-numeric: tabular-nums; }
+.w-card .progress-bg { height: 6px; background: rgba(128,128,128,0.3); border-radius: 3px; overflow: hidden; }
+.w-card .progress-bar { height: 100%; background: var(--w-accent, var(--accent)); width: 0%; transition: width 0.1s linear; }
+
+/* C: Minimal Marquee */
+.w-minimal { padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 1rem; border-left: 4px solid var(--w-accent, var(--accent)); display: flex; gap: 8px; max-width: 250px; overflow: hidden; white-space: nowrap; }
+.w-minimal .icon { color: var(--w-accent, var(--accent)); }
+.w-minimal .text-wrap { overflow: hidden; flex-grow: 1; position: relative; }
+.w-minimal .text-inner { display: inline-block; padding-left: 100%; animation: marquee 10s linear infinite; }
+.w-minimal .text-inner span { opacity: 0.7; font-weight: 400; margin-left: 4px; }
+
+/* D: Vinyl */
+.w-vinyl { display: flex; align-items: center; gap: -20px; padding: 12px 24px 12px 12px; border-radius: 50px; }
+.w-vinyl .disk { width: 64px; height: 64px; border-radius: 50%; background: #111; border: 2px solid #333; position: relative; animation: spin 4s linear infinite; display: flex; justify-content: center; align-items: center; z-index: 2; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+.w-vinyl .disk::before { content: ''; width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(45deg, var(--w-accent, var(--accent)), #f0f); position: absolute; }
+.w-vinyl .disk::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #fff; position: absolute; }
+.w-vinyl .info { background: rgba(0,0,0,0.6); padding: 10px 20px 10px 40px; border-radius: 0 20px 20px 0; margin-left: -32px; z-index: 1; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); max-width: 200px; }
+.w-vinyl .title { margin: 0; font-size: 0.9rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.w-vinyl .artist { margin: 0; font-size: 0.75rem; opacity: 0.7; }
+
+/* E: Pure Progress */
+.w-pure-progress { width: 100%; max-width: 400px; height: 4px; background: rgba(255,255,255,0.1); position: relative; }
+.w-pure-progress .bar { height: 100%; background: var(--w-accent, var(--accent)); width: 0%; box-shadow: 0 0 10px var(--w-accent, var(--accent)); }
+
+/* F: Visualizer */
+.w-visualizer { display: flex; align-items: flex-end; gap: 4px; height: 40px; padding: 10px; border-radius: 8px; }
+.w-visualizer .bar { width: 6px; background: var(--w-accent, var(--accent)); border-radius: 3px 3px 0 0; transition: height 0.1s ease; }
+
+/* G: Lyrics */
+.w-lyrics { text-align: center; font-size: 1.5rem; font-weight: 700; max-width: 400px; line-height: 1.4; }
+.w-lyrics .current { color: var(--w-accent, var(--accent)); text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+.w-lyrics .upcoming { color: rgba(255,255,255,0.3); font-size: 1rem; margin-top: 8px; filter: blur(1px); }
+
+/* Transiciones de canción */
+.transition-container { position: relative; width: 300px; height: 100px; overflow: hidden; border-radius: 12px; }
+.t-card { position: absolute; inset: 0; background: var(--surface-2); display: flex; align-items: center; padding: 16px; gap: 16px; border: 1px solid var(--border); border-radius: 12px; }
+.t-card .cover { width: 60px; height: 60px; border-radius: 8px; background: #333; }
+.t-card .title { font-weight: bold; margin: 0; }
+.t-card .artist { opacity: 0.7; margin: 0; font-size: 0.85rem; }
+
+/* Slide */
+.anim-slide-enter { transform: translateX(100%); }
+.anim-slide-enter-active { transform: translateX(0); transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+.anim-slide-exit { transform: translateX(0); }
+.anim-slide-exit-active { transform: translateX(-100%); transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* Fade+Scale */
+.anim-fade-enter { opacity: 0; transform: scale(0.9); }
+.anim-fade-enter-active { opacity: 1; transform: scale(1); transition: all 0.5s ease; }
+.anim-fade-exit { opacity: 1; transform: scale(1); }
+.anim-fade-exit-active { opacity: 0; transform: scale(1.1); transition: all 0.5s ease; }
+
+/* Flip */
+.anim-flip-enter { transform: rotateX(90deg); opacity: 0; }
+.anim-flip-enter-active { transform: rotateX(0); opacity: 1; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.anim-flip-exit { transform: rotateX(0); opacity: 1; }
+.anim-flip-exit-active { transform: rotateX(-90deg); opacity: 0; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+</style>
+</head>
+<body>
+
+<nav>
+    <ul>
+        <li><a href="#galeria">1. Galería de Widgets</a></li>
+        <li><a href="#transiciones">2. Transiciones</a></li>
+        <li><a href="#comparativa">3. Comparativa Fuentes</a></li>
+        <li><a href="#arquitectura">4. Arquitectura</a></li>
+        <li><a href="#url-builder">5. Constructor URL</a></li>
+    </ul>
+</nav>
+
+<div class="container">
+    <header>
+        <h1>Overlays de Música</h1>
+        <p style="color: var(--muted)">Documento de diseño y producto para el sistema de overlays musicales de Chatich.</p>
+    </header>
+
+    <section id="galeria">
+        <h2>1. Galería de estilos de widget 'Now Playing'</h2>
+        <div class="card">
+            <div class="controls">
+                <label>Tema:
+                    <select id="widget-theme" onchange="updateWidgets()">
+                        <option value="theme-dark">Oscuro</option>
+                        <option value="theme-light">Claro</option>
+                    </select>
+                </label>
+                <label>Acento:
+                    <input type="color" id="widget-accent" value="#1DB954" oninput="updateWidgets()">
+                </label>
+                <label>Estilo:
+                    <select id="widget-style" onchange="showWidget(this.value)">
+                        <option value="compact">A. Compacto Horizontal</option>
+                        <option value="card">B. Tarjeta Vertical</option>
+                        <option value="minimal">C. Minimalista Marquee</option>
+                        <option value="vinyl">D. Vinilo Girando</option>
+                        <option value="pure">E. Barra Pura</option>
+                        <option value="visualizer">F. Visualizador Reactivo</option>
+                        <option value="lyrics">G. Letra en Vivo</option>
+                    </select>
+                </label>
+            </div>
+
+            <div class="widget-container" id="preview-container">
+                <!-- A: Compact -->
+                <div class="widget theme-dark w-compact" id="w-compact">
+                    <div class="cover"></div>
+                    <div class="info">
+                        <p class="title" id="t-compact">Buscando...</p>
+                        <p class="artist" id="a-compact">...</p>
+                        <div class="progress-bg"><div class="progress-bar" id="p-compact"></div></div>
+                    </div>
+                </div>
+
+                <!-- B: Card -->
+                <div class="widget theme-dark w-card" id="w-card" style="display:none;">
+                    <div class="cover"></div>
+                    <p class="title" id="t-card">Buscando...</p>
+                    <p class="artist" id="a-card">...</p>
+                    <div class="progress-bg"><div class="progress-bar" id="p-card"></div></div>
+                    <div class="times">
+                        <span id="time-curr">0:00</span>
+                        <span id="time-total">3:45</span>
+                    </div>
+                </div>
+
+                <!-- C: Minimal -->
+                <div class="widget theme-dark w-minimal" id="w-minimal" style="display:none;">
+                    <span class="icon">♪</span>
+                    <div class="text-wrap">
+                        <div class="text-inner"><span id="t-minimal">Buscando...</span> - <span id="a-minimal">...</span></div>
+                    </div>
+                </div>
+
+                <!-- D: Vinyl -->
+                <div class="widget theme-dark w-vinyl" id="w-vinyl" style="display:none;">
+                    <div class="disk"></div>
+                    <div class="info">
+                        <p class="title" id="t-vinyl">Buscando...</p>
+                        <p class="artist" id="a-vinyl">...</p>
+                    </div>
+                </div>
+
+                <!-- E: Pure Progress -->
+                <div class="widget theme-dark w-pure-progress" id="w-pure" style="display:none;">
+                    <div class="bar" id="p-pure"></div>
+                </div>
+
+                <!-- F: Visualizer -->
+                <div class="widget theme-dark w-visualizer" id="w-visualizer" style="display:none;">
+                    <!-- barras generadas por JS -->
+                </div>
+
+                <!-- G: Lyrics -->
+                <div class="widget theme-dark w-lyrics" id="w-lyrics" style="display:none;">
+                    <div class="current" id="lyric-current">...</div>
+                    <div class="upcoming" id="lyric-next">...</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="transiciones">
+        <h2>2. Transiciones de cambio de canción</h2>
+        <div class="card">
+            <div class="controls">
+                <label>Animación:
+                    <select id="trans-type">
+                        <option value="slide">Slide</option>
+                        <option value="fade">Fade + Scale</option>
+                        <option value="flip">Flip</option>
+                    </select>
+                </label>
+                <button onclick="nextSongTrans()">Siguiente Canción ⏭️</button>
+            </div>
+            
+            <div class="widget-container" style="background: transparent; border: none; padding: 0;">
+                <div class="transition-container" id="trans-container" style="perspective: 1000px;">
+                    <div class="t-card" id="trans-current">
+                        <div class="cover" style="background: linear-gradient(45deg, #FF0033, #333)"></div>
+                        <div>
+                            <p class="title">Bohemian Rhapsody</p>
+                            <p class="artist">Queen</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="comparativa">
+        <h2>3. Comparativa técnica de integraciones</h2>
+        <div class="card">
+            <p>Análisis de las fuentes de datos disponibles para el estado <em>Now Playing</em>.</p>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fuente</th>
+                            <th>Datos</th>
+                            <th>OAuth / Auth</th>
+                            <th>Instalación Local</th>
+                            <th>Latencia</th>
+                            <th>Esfuerzo</th>
+                            <th>Notas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Spotify</strong></td>
+                            <td>Todo (progreso, covers hi-res)</td>
+                            <td>OAuth 2.0 PKCE</td>
+                            <td>No</td>
+                            <td>Media (Polling)</td>
+                            <td><span class="badge medium">Medio</span></td>
+                            <td>API pública oficial. Endpoint <code>/me/player/currently-playing</code>. No tiene webhooks, requiere polling agresivo. Intercambio de tokens ideal en route handler de Next.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>YouTube Music</strong></td>
+                            <td>Casi todo</td>
+                            <td>No (oficial)</td>
+                            <td>Sí (extension/companion)</td>
+                            <td>Baja</td>
+                            <td><span class="badge high">Alto</span></td>
+                            <td>No hay API oficial. Opciones: scraping o companion local (ej. <code>th-ch/youtube-music</code>) exponiendo HTTP en localhost. Trade-off: mucha fricción para el usuario.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Apple Music</strong></td>
+                            <td>Todo</td>
+                            <td>Developer Token JWT + User Token</td>
+                            <td>No</td>
+                            <td>Baja</td>
+                            <td><span class="badge high">Alto</span></td>
+                            <td>MusicKit JS. Developer token JWT firmado server-side (ES256) requiere Apple Developer Program (USD 99/año).</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Last.fm</strong></td>
+                            <td>Básico (sin progreso preciso)</td>
+                            <td>API Key (sin OAuth)</td>
+                            <td>Depende del scrobbler</td>
+                            <td>Alta</td>
+                            <td><span class="badge low">Bajo</span></td>
+                            <td><code>user.getRecentTracks</code>. Funciona como agregador universal si el usuario ya scrobblea. Falla en progreso en tiempo real y latencia.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Windows SMTC</strong></td>
+                            <td>Básico (depende del reproductor)</td>
+                            <td>No</td>
+                            <td>Sí (App nativa)</td>
+                            <td>Baja (Tiempo real)</td>
+                            <td><span class="badge high">Alto</span></td>
+                            <td>System Media Transport Controls. Solución universal que captura cualquier audio de Windows, pero nos obliga a mantener un `.exe` companion en C# o Rust.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>OBS / Archivo local</strong></td>
+                            <td>Texto plano (Título - Artista)</td>
+                            <td>No</td>
+                            <td>Sí (Snip, Tuna, etc.)</td>
+                            <td>Baja</td>
+                            <td><span class="badge low">Bajo</span></td>
+                            <td>Leer `.txt` local. Cero fricción de desarrollo para nosotros, muy usado por streamers old-school, pero limitado en metadata (sin portadas fáciles).</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section id="arquitectura">
+        <h2>4. Arquitectura propuesta</h2>
+        <div class="card">
+            <p>Se propone un patrón adaptador para normalizar cualquier fuente en una interfaz común <code>MusicProvider</code>.</p>
+            <pre><code>type NowPlaying = { 
+  source: 'spotify' | 'ytmusic' | 'apple' | 'lastfm' | 'smtc' | 'file'; 
+  title: string; 
+  artist: string; 
+  album?: string; 
+  artworkUrl?: string; 
+  progressMs: number; 
+  durationMs: number; 
+  isPlaying: boolean; 
+  updatedAt: number;
+}
+
+interface MusicProvider { 
+  id: string; 
+  connect(config: any): Promise&lt;void&gt;; 
+  subscribe(callback: (np: NowPlaying | null) =&gt; void): () =&gt; void; 
+  disconnect(): void; 
+}</code></pre>
+            
+            <h3 style="color: var(--text); font-size: 1.1rem; margin-top: 1.5rem;">Flujo de Datos</h3>
+            <div style="padding: 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 1.5rem; text-align: center;">
+                <svg viewBox="0 0 600 100" style="width: 100%; max-width: 600px; height: auto;">
+                    <defs>
+                        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                            <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--muted)" />
+                        </marker>
+                    </defs>
+                    <g fill="var(--surface-2)" stroke="var(--border)" stroke-width="2">
+                        <rect x="10" y="30" width="100" height="40" rx="8" />
+                        <rect x="160" y="30" width="120" height="40" rx="8" />
+                        <rect x="330" y="30" width="120" height="40" rx="8" />
+                        <rect x="500" y="30" width="90" height="40" rx="8" />
+                    </g>
+                    <g fill="var(--text)" font-family="var(--font)" font-size="12" text-anchor="middle">
+                        <text x="60" y="54">Fuente (API)</text>
+                        <text x="220" y="54">MusicProvider</text>
+                        <text x="390" y="54">useNowPlaying()</text>
+                        <text x="545" y="54">OBS Browser</text>
+                    </g>
+                    <g stroke="var(--muted)" stroke-width="2" marker-end="url(#arrow)">
+                        <line x1="110" y1="50" x2="150" y2="50" />
+                        <line x1="280" y1="50" x2="320" y2="50" />
+                        <line x1="450" y1="50" x2="490" y2="50" />
+                    </g>
+                </svg>
+            </div>
+
+            <h3 style="color: var(--text); font-size: 1.1rem;">Gestión de Estado y Tokens (El problema Stateless)</h3>
+            <p>Chatich actualmente se configura 100% por querystring, sin base de datos. Para fuentes con OAuth (Spotify), guardar un <em>refresh token</em> en la URL presenta riesgos de seguridad y hace urls inmanejables por tamaño.</p>
+            <ul>
+                <li><strong>Opción A (URL cifrada):</strong> Cifrar el refresh token con un secreto del server y pasarlo en la URL (ej. <code>?spotify_token=abc123cifrado...</code>). El server lo descifra al hacer peticiones. Mantiene la app stateless.</li>
+                <li><strong>Opción B (Sesión Server-Side con Cookies):</strong> Crear un sistema mínimo de sesiones (ej. JWT en cookie <code>HttpOnly</code>). Rompe un poco el paradigma 100% url-based para compartir overlays, requiere que el streamer se loguee en el browser source de OBS (difícil) o use un código de vinculación.</li>
+                <li><strong>Recomendación:</strong> <strong>Opción A</strong>. Crear una ruta intermedia <code>/api/auth/spotify</code> que haga el flujo OAuth, cifre el refresh token resultante con AES y redirija al usuario a una URL limpia con el token cifrado en el path o querystring. El overlay lee ese parámetro, hace ping al server y el server hace el polling a Spotify. Mantiene la portabilidad máxima de las URLs para OBS.</li>
+            </ul>
+        </div>
+    </section>
+
+    <section id="url-builder">
+        <h2>5. Constructor de URL interactivo</h2>
+        <div class="card">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                <label>Fuente:
+                    <select id="b-source" onchange="buildUrl()" style="width:100%; margin-top:4px; padding:8px; background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:6px;">
+                        <option value="spotify">Spotify</option>
+                        <option value="lastfm">Last.fm</option>
+                        <option value="ytmusic">YouTube Music</option>
+                    </select>
+                </label>
+                <label>Estilo:
+                    <select id="b-style" onchange="buildUrl()" style="width:100%; margin-top:4px; padding:8px; background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:6px;">
+                        <option value="compact">Compacto</option>
+                        <option value="card">Tarjeta</option>
+                        <option value="vinyl">Vinilo</option>
+                        <option value="minimal">Minimalista</option>
+                    </select>
+                </label>
+                <label>Tema:
+                    <select id="b-theme" onchange="buildUrl()" style="width:100%; margin-top:4px; padding:8px; background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:6px;">
+                        <option value="dark">Oscuro</option>
+                        <option value="light">Claro</option>
+                    </select>
+                </label>
+                <label>Acento:
+                    <input type="color" id="b-accent" value="#1DB954" onchange="buildUrl()" style="width:100%; margin-top:4px; height:36px; padding:2px; background:var(--bg); border:1px solid var(--border); border-radius:6px;">
+                </label>
+            </div>
+            <label style="display:flex; align-items:center; gap:8px; margin-bottom:1.5rem; cursor:pointer;">
+                <input type="checkbox" id="b-progress" checked onchange="buildUrl()"> Mostrar barra de progreso
+            </label>
+            
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="b-result" readonly style="flex-grow:1; padding:10px; background:var(--surface-2); color:var(--text); border:1px solid var(--border); border-radius:6px; font-family:var(--mono); font-size:0.9rem;" value="https://chatich.vercel.app/overlay/nowplaying?source=spotify&style=compact&theme=dark&accent=1DB954&progress=1">
+                <button onclick="copyUrl()" style="padding:10px 16px; background:var(--accent); color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:600;">Copiar</button>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<script>
+// --- Fake Data y Lógica de Galería ---
+const fakeSongs = [
+    { title: "Bohemian Rhapsody", artist: "Queen", lyrics: ["Is this the real life?", "Is this just fantasy?"] },
+    { title: "Blinding Lights", artist: "The Weeknd", lyrics: ["I said, ooh, I'm blinded by the lights", "No, I can't sleep until I feel your touch"] },
+    { title: "Daft Punk Is Playing At My House", artist: "LCD Soundsystem", lyrics: ["Well, Daft Punk is playing at my house", "My house"] }
+];
+let currentSongIndex = 0;
+let progress = 0;
+let duration = 225; // segundos (3:45)
+
+function updateWidgets() {
+    const theme = document.getElementById('widget-theme').value;
+    const accent = document.getElementById('widget-accent').value;
+    
+    document.querySelectorAll('.widget').forEach(w => {
+        w.className = w.className.replace(/theme-\w+/, theme);
+        w.style.setProperty('--w-accent', accent);
+    });
+}
+
+function showWidget(id) {
+    document.querySelectorAll('.widget').forEach(w => w.style.display = 'none');
+    document.getElementById('w-' + id).style.display = (id === 'minimal' || id === 'vinyl' || id === 'visualizer' || id === 'compact' || id === 'card') ? 'flex' : 'block';
+    
+    if(id === 'visualizer' && document.getElementById('w-visualizer').children.length === 0) {
+        initVisualizer();
+    }
+}
+
+function formatTime(s) {
+    const min = Math.floor(s / 60);
+    const sec = Math.floor(s % 60).toString().padStart(2, '0');
+    return `${min}:${sec}`;
+}
+
+// Bucle principal de reproducción falsa
+setInterval(() => {
+    progress += 1;
+    if (progress > duration) progress = 0;
+    const pct = (progress / duration) * 100;
+    
+    // Actualizar barras
+    if(document.getElementById('p-compact')) document.getElementById('p-compact').style.width = pct + '%';
+    if(document.getElementById('p-card')) document.getElementById('p-card').style.width = pct + '%';
+    if(document.getElementById('p-pure')) document.getElementById('p-pure').style.width = pct + '%';
+    
+    // Actualizar tiempos en card
+    if(document.getElementById('time-curr')) document.getElementById('time-curr').innerText = formatTime(progress);
+    
+    // Animar visualizador aleatoriamente
+    const vis = document.getElementById('w-visualizer');
+    if(vis && vis.style.display !== 'none') {
+        Array.from(vis.children).forEach(bar => {
+            bar.style.height = (Math.random() * 30 + 10) + 'px';
+        });
+    }
+
+    // Actualizar letra cada 10 seg
+    if (progress % 10 === 0) {
+        const song = fakeSongs[currentSongIndex];
+        const lineIdx = Math.floor(progress / 10) % song.lyrics.length;
+        const nextIdx = (lineIdx + 1) % song.lyrics.length;
+        if(document.getElementById('lyric-current')) {
+            document.getElementById('lyric-current').innerText = song.lyrics[lineIdx];
+            document.getElementById('lyric-next').innerText = song.lyrics[nextIdx];
+        }
+    }
+}, 1000);
+
+// Iniciar info inicial
+function setSongInfo() {
+    const song = fakeSongs[currentSongIndex];
+    ['compact', 'card', 'minimal', 'vinyl'].forEach(prefix => {
+        if(document.getElementById(`t-${prefix}`)) document.getElementById(`t-${prefix}`).innerText = song.title;
+        if(document.getElementById(`a-${prefix}`)) document.getElementById(`a-${prefix}`).innerText = song.artist;
+    });
+    progress = 0;
+}
+setSongInfo();
+
+function initVisualizer() {
+    const v = document.getElementById('w-visualizer');
+    for(let i=0; i<15; i++) {
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        bar.style.height = '10px';
+        v.appendChild(bar);
+    }
+}
+
+// --- Lógica de Transiciones ---
+const playlist = [
+    { t: "Bohemian Rhapsody", a: "Queen", c: "#FF0033" },
+    { t: "Midnight City", a: "M83", c: "#1DB954" },
+    { t: "Get Lucky", a: "Daft Punk", c: "#7C5CFF" }
+];
+let transIdx = 0;
+
+function nextSongTrans() {
+    const container = document.getElementById('trans-container');
+    const oldCard = document.getElementById('trans-current');
+    const animType = document.getElementById('trans-type').value;
+    
+    transIdx = (transIdx + 1) % playlist.length;
+    const nextSong = playlist[transIdx];
+    
+    const newCard = document.createElement('div');
+    newCard.className = 't-card anim-' + animType + '-enter';
+    newCard.innerHTML = `
+        <div class="cover" style="background: linear-gradient(45deg, ${nextSong.c}, #333)"></div>
+        <div>
+            <p class="title">${nextSong.t}</p>
+            <p class="artist">${nextSong.a}</p>
+        </div>
+    `;
+    
+    container.appendChild(newCard);
+    
+    // Trigger reflow
+    void newCard.offsetWidth;
+    
+    oldCard.className = 't-card anim-' + animType + '-exit-active';
+    newCard.className = 't-card anim-' + animType + '-enter-active';
+    
+    setTimeout(() => {
+        oldCard.remove();
+        newCard.className = 't-card';
+        newCard.id = 'trans-current';
+    }, 500);
+}
+
+// --- Lógica Constructor URL ---
+function buildUrl() {
+    const src = document.getElementById('b-source').value;
+    const sty = document.getElementById('b-style').value;
+    const thm = document.getElementById('b-theme').value;
+    const acc = document.getElementById('b-accent').value.replace('#', '');
+    const prog = document.getElementById('b-progress').checked ? '1' : '0';
+    
+    const url = `https://chatich.vercel.app/overlay/nowplaying?source=${src}&style=${sty}&theme=${thm}&accent=${acc}&progress=${prog}`;
+    document.getElementById('b-result').value = url;
+}
+
+function copyUrl() {
+    const el = document.getElementById('b-result');
+    el.select();
+    document.execCommand('copy');
+    const btn = event.target;
+    const originalText = btn.innerText;
+    btn.innerText = '¡Copiado!';
+    btn.style.background = '#1DB954';
+    setTimeout(() => {
+        btn.innerText = originalText;
+        btn.style.background = 'var(--accent)';
+    }, 2000);
+}
+
+// Inicializar estado widgets custom
+updateWidgets();
+</script>
+</body>
+</html>

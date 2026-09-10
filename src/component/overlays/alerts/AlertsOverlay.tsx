@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useStreamEvent } from '@/contexts/streamContext';
 import { StreamEvent, EventOf, StreamEventType } from '@/lib/events/types';
 import DebugPanel from '../debug/DebugPanel';
+import { normalizeTheme, themeSurface, type OverlayTheme } from '../ui';
 
 type QueueItem = {
     id: string;
@@ -26,7 +27,7 @@ export default function AlertsOverlay({ config }: { config?: AlertsConfig } = {}
     const searchParams = useSearchParams();
     const position = config?.position || searchParams.get('position') || 'top-center';
     const duration = config?.duration !== undefined ? config.duration : parseInt(searchParams.get('duration') || '6000', 10);
-    const theme = config?.theme || searchParams.get('theme') || 'dark';
+    const theme = normalizeTheme(config?.theme || searchParams.get('theme'));
     const accent = config?.accent || searchParams.get('accent');
     const sound = config?.sound !== undefined ? config.sound : (searchParams.get('sound') === '1');
     const eventsFilter = config?.events || (searchParams.get('events')?.split(',').filter(Boolean) as StreamEventType[] | undefined);
@@ -149,7 +150,7 @@ export default function AlertsOverlay({ config }: { config?: AlertsConfig } = {}
     );
 }
 
-function AlertBox({ item, theme, customAccent }: { item: QueueItem, theme: string, customAccent: string | null }) {
+function AlertBox({ item, theme, customAccent }: { item: QueueItem, theme: OverlayTheme, customAccent: string | null }) {
     const { event, groupedCount } = item;
     
     let color = '';
@@ -205,9 +206,7 @@ function AlertBox({ item, theme, customAccent }: { item: QueueItem, theme: strin
             break;
     }
 
-    const isDark = theme !== 'light';
-    const bgClass = isDark ? 'bg-slate-900/90' : 'bg-white/90';
-    const textClass = isDark ? 'text-white' : 'text-slate-900';
+    const surface = themeSurface(theme);
 
     return (
         <motion.div
@@ -215,12 +214,12 @@ function AlertBox({ item, theme, customAccent }: { item: QueueItem, theme: strin
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -50, scale: 0.9, transition: { duration: 0.3 } }}
             transition={{ type: 'spring', bounce: 0.4, duration: 0.6 }}
-            style={{ 
-                '--accent': color, 
-                borderColor: color, 
-                ...(theme === 'neon' ? { boxShadow: `0 0 20px ${color}` } : {}) 
+            style={{
+                '--accent': color,
+                borderColor: color,
+                borderWidth: '2px',
             } as React.CSSProperties}
-            className={`flex flex-col items-center justify-center p-6 rounded-2xl border-2 ${bgClass} ${textClass} min-w-[300px]`}
+            className={`flex flex-col items-center justify-center p-6 rounded-2xl text-text ${surface.className} min-w-[300px]`}
         >
             <motion.div 
                 initial={{ scale: 0 }}
@@ -231,7 +230,7 @@ function AlertBox({ item, theme, customAccent }: { item: QueueItem, theme: strin
             >
                 🎉
             </motion.div>
-            <h2 className="text-2xl font-bold mb-1 text-center" style={{ color: theme === 'light' ? color : 'inherit' }}>
+            <h2 className="text-2xl font-bold mb-1 text-center">
                 {title}
             </h2>
             <p className="text-lg text-center opacity-90">

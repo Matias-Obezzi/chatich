@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @plugin '@tailwindcss/typography';
 
+/* Los componentes de uiness/shadcn traen variantes `dark:`. El sitio es oscuro por
+   defecto, así que marcamos <html class="dark"> y registramos la variante. */
+@custom-variant dark (&:is(.dark *));
+
 @theme {
   --color-bg: var(--bg);
   --color-bg-2: var(--bg-2);
@@ -19,6 +23,16 @@
   --color-foreground: var(--text);
   --color-muted-foreground: var(--muted);
   --color-ring: var(--neon);
+  --color-primary: var(--neon);
+  --color-primary-foreground: var(--bg);
+  --color-secondary: var(--surface-2);
+  --color-secondary-foreground: var(--text);
+  --color-accent: var(--surface-2);
+  --color-accent-foreground: var(--text);
+  --color-popover: var(--surface-2);
+  --color-popover-foreground: var(--text);
+  --color-destructive: var(--youtube);
+  --color-input: var(--border);
   --color-twitch: var(--twitch);
   --color-kick: var(--kick);
   --color-youtube: var(--youtube);

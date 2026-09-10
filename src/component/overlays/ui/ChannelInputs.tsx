@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { useChannels, type Channels } from '@/lib/useChannels';
-import { CONTROL_CLASS } from './fields';
+import { Input } from '@/component/ui/input';
+import { Label } from '@/component/ui/label';
 
 type PlatformInput = {
     key: keyof Channels;
@@ -29,17 +30,13 @@ export default function ChannelInputs({ className }: { className?: string }) {
             <div className="space-y-3">
                 {PLATFORMS.map((platform) => (
                     <div key={platform.key}>
-                        <label
-                            htmlFor={`channel-${platform.key}`}
-                            className="flex items-center gap-2 text-sm font-medium text-text/90 mb-1.5"
-                        >
+                        <Label htmlFor={`channel-${platform.key}`} className="text-sm font-medium text-text/90 mb-1.5">
                             <span className={`w-2 h-2 rounded-full ${platform.dotClass}`} aria-hidden="true" />
                             {platform.label}
-                        </label>
-                        <input
+                        </Label>
+                        <Input
                             id={`channel-${platform.key}`}
                             type="text"
-                            className={CONTROL_CLASS}
                             value={channels[platform.key]}
                             placeholder={platform.placeholder}
                             onChange={(e) => updateChannels({ [platform.key]: e.target.value })}

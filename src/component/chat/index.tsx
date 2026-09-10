@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import { useStream } from '@/contexts/streamContext';
 import { Message } from '@/component/chat/message';
 import { AnimatePresence } from 'framer-motion';
+import { normalizeTheme } from '@/component/overlays/ui';
 
 export type CustomStyles = Partial<{
   'username-color': string;
@@ -43,6 +44,9 @@ export const ChatViewClient = () => {
   const [styles, setStyles] = useState<{ [key: string]: string }>({});
   
   const layout = searchParams.get('layout') === 'vertical' ? 'vertical' : 'horizontal';
+  // El chat nunca tuvo parámetro `theme` y siempre se dibujó con desenfoque:
+  // sin este fallback, las URLs ya pegadas en OBS pasarían a verse sólidas.
+  const theme = normalizeTheme(searchParams.get('theme'), 'glass');
   const ttlParam = searchParams.get('ttl');
   const ttl = ttlParam ? parseInt(ttlParam, 10) : undefined;
 
@@ -76,7 +80,7 @@ export const ChatViewClient = () => {
       }}
     >
       <AnimatePresence mode="popLayout">
-        {messages.map((msg) => <Message message={msg} key={msg.id} styles={styles} layout={layout} ttl={ttl} />)}
+        {messages.map((msg) => <Message message={msg} key={msg.id} styles={styles} layout={layout} ttl={ttl} theme={theme} />)}
       </AnimatePresence>
     </div>
   )

@@ -1,10 +1,19 @@
 'use client';
 
 import React from 'react';
-
-/** Estilo base compartido por todos los controles de texto/select del kit. */
-export const CONTROL_CLASS =
-    'w-full bg-bg-2 border border-border rounded-xl p-2.5 text-text text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-neon/50 focus:border-neon/50';
+import { Switch } from '@/component/ui/switch';
+import { Label } from '@/component/ui/label';
+import { Slider } from '@/component/ui/slider';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/component/ui/select';
+import { ToggleGroup, ToggleGroupItem } from '@/component/ui/toggle-group';
+import { Checkbox } from '@/component/ui/checkbox';
+import { Input } from '@/component/ui/input';
 
 type SectionProps = {
     title: string;
@@ -60,9 +69,8 @@ type TextFieldProps = {
 export function TextField({ label, value, onChange, placeholder, hint, type = 'text', min, max, className }: TextFieldProps) {
     return (
         <Field label={label} hint={hint} className={className}>
-            <input
+            <Input
                 type={type}
-                className={CONTROL_CLASS}
                 value={value}
                 min={min}
                 max={max}
@@ -87,13 +95,18 @@ type SelectFieldProps = {
 export function SelectField({ label, value, onChange, options, hint, className }: SelectFieldProps) {
     return (
         <Field label={label} hint={hint} className={className}>
-            <select className={CONTROL_CLASS} value={value} onChange={(e) => onChange(e.target.value)}>
-                {options.map((option) => (
-                    <option key={option.value} value={option.value}>
-                        {option.label}
-                    </option>
-                ))}
-            </select>
+            <Select value={value} onValueChange={onChange}>
+                <SelectTrigger className="w-full">
+                    <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                    {options.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
         </Field>
     );
 }
@@ -115,23 +128,35 @@ const COLUMN_CLASS: Record<1 | 2 | 3 | 4, string> = {
     4: 'grid-cols-4',
 };
 
+// Radix ToggleGroup usa '' internamente como "nada seleccionado" (lo que emite al deseleccionar
+// el item activo), así que un item con value literal '' (ej: el TTL "Siempre" del chat) nunca
+// llega a marcarse "on". Se mapea a un token interno para que ese valor legítimo no choque con
+// el sentinel de deselección de Radix.
+const EMPTY_VALUE_TOKEN = '__option-cards-empty__';
+const toRadixValue = (value: string) => (value === '' ? EMPTY_VALUE_TOKEN : value);
+const fromRadixValue = (value: string) => (value === EMPTY_VALUE_TOKEN ? '' : value);
+
 export function OptionCards({ label, value, onChange, options, hint, columns = 2, className }: OptionCardsProps) {
     return (
         <Field label={label} hint={hint} className={className}>
-            <div className={`grid gap-2 ${COLUMN_CLASS[columns]}`}>
+            <ToggleGroup
+                type="single"
+                value={toRadixValue(value)}
+                // Un ToggleGroup single permite deseleccionar el item activo, y en ese caso
+                // Radix emite ''. Estos controles siempre tienen que tener un valor elegido,
+                // así que esa deselección se ignora.
+                onValueChange={(next) => {
+                    if (next) onChange(fromRadixValue(next));
+                }}
+                className={`grid w-full gap-2 ${COLUMN_CLASS[columns]}`}
+            >
                 {options.map((option) => {
                     const isActive = option.value === value;
                     return (
-                        <button
+                        <ToggleGroupItem
                             key={option.value}
-                            type="button"
-                            onClick={() => onChange(option.value)}
-                            aria-pressed={isActive}
-                            className={`rounded-xl px-3 py-2 text-sm text-left transition-colors focus:outline-none focus:ring-2 focus:ring-neon/50 ${
-                                isActive
-                                    ? 'bg-neon text-bg font-bold'
-                                    : 'bg-bg-2 border border-border text-muted hover:text-text hover:border-neon/40'
-                            }`}
+                            value={toRadixValue(option.value)}
+                            className={`h-auto min-w-0 flex-col items-start gap-0 rounded-xl! border border-border bg-bg-2 px-3 py-2 text-left text-sm font-normal text-muted hover:border-neon/40 hover:text-text hover:bg-bg-2 data-[state=on]:border-neon data-[state=on]:bg-neon data-[state=on]:text-bg data-[state=on]:font-bold data-[state=on]:hover:bg-neon`}
                         >
                             <span className="block leading-tight">{option.label}</span>
                             {option.hint && (
@@ -139,10 +164,10 @@ export function OptionCards({ label, value, onChange, options, hint, columns = 2
                                     {option.hint}
                                 </span>
                             )}
-                        </button>
+                        </ToggleGroupItem>
                     );
                 })}
-            </div>
+            </ToggleGroup>
         </Field>
     );
 }
@@ -171,14 +196,12 @@ export function SliderField({ label, value, onChange, min, max, step = 1, format
                 </span>
             }
         >
-            <input
-                type="range"
-                className="w-full accent-neon cursor-pointer"
+            <Slider
                 min={min}
                 max={max}
                 step={step}
-                value={value}
-                onChange={(e) => onChange(Number(e.target.value))}
+                value={[value]}
+                onValueChange={([next]) => onChange(next)}
             />
         </Field>
     );
@@ -193,26 +216,14 @@ type ToggleFieldProps = {
 };
 
 export function ToggleField({ label, checked, onChange, hint, className }: ToggleFieldProps) {
+    const id = React.useId();
     return (
         <div className={className}>
             <div className="flex items-center justify-between gap-4">
-                <span className="text-sm font-medium text-text/90">{label}</span>
-                <button
-                    type="button"
-                    role="switch"
-                    aria-checked={checked}
-                    aria-label={label}
-                    onClick={() => onChange(!checked)}
-                    className={`relative w-11 h-6 shrink-0 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-neon/50 ${
-                        checked ? 'bg-neon' : 'bg-bg-2 border border-border'
-                    }`}
-                >
-                    <span
-                        className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-text transition-transform ${
-                            checked ? 'translate-x-6' : 'translate-x-1'
-                        }`}
-                    />
-                </button>
+                <Label htmlFor={id} className="text-sm font-medium text-text/90">
+                    {label}
+                </Label>
+                <Switch id={id} checked={checked} onCheckedChange={onChange} />
             </div>
             {hint && <p className="text-xs text-muted mt-1">{hint}</p>}
         </div>
@@ -230,20 +241,28 @@ type CheckboxListProps = {
 };
 
 export function CheckboxList({ label, items, onToggle, hint, className }: CheckboxListProps) {
+    const uid = React.useId();
     return (
         <Field label={label} hint={hint} className={className}>
             <div className="space-y-2">
-                {items.map((item) => (
-                    <label key={item.key} className="flex items-center gap-2.5 cursor-pointer group">
-                        <input
-                            type="checkbox"
-                            checked={item.checked}
-                            onChange={(e) => onToggle(item.key, e.target.checked)}
-                            className="w-4 h-4 rounded bg-bg-2 border border-border accent-neon cursor-pointer focus:outline-none focus:ring-2 focus:ring-neon/50"
-                        />
-                        <span className="text-sm text-muted group-hover:text-text transition-colors">{item.label}</span>
-                    </label>
-                ))}
+                {items.map((item) => {
+                    const id = `${uid}-${item.key}`;
+                    return (
+                        <div key={item.key} className="flex items-center gap-2.5 group">
+                            <Checkbox
+                                id={id}
+                                checked={item.checked}
+                                onCheckedChange={(next) => onToggle(item.key, next === true)}
+                            />
+                            <Label
+                                htmlFor={id}
+                                className="text-sm font-normal text-muted group-hover:text-text transition-colors cursor-pointer"
+                            >
+                                {item.label}
+                            </Label>
+                        </div>
+                    );
+                })}
             </div>
         </Field>
     );
@@ -339,14 +358,12 @@ export function ColorField({ label, value, onChange, hint, presets, allowAlpha =
                         <span className="text-xs text-muted">Opacidad</span>
                         <span className="text-xs font-mono text-neon tabular-nums">{alpha}%</span>
                     </div>
-                    <input
-                        type="range"
-                        className="w-full accent-neon cursor-pointer"
+                    <Slider
                         min={0}
                         max={100}
                         step={1}
-                        value={alpha}
-                        onChange={(e) => emit(hex, Number(e.target.value))}
+                        value={[alpha]}
+                        onValueChange={([next]) => emit(hex, next)}
                         aria-label={`${label}: opacidad`}
                     />
                 </div>

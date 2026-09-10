@@ -13,6 +13,8 @@ import {
     DrawerTitle,
     DrawerTrigger,
 } from '@/component/ui/drawer';
+import { Button } from '@/component/ui/button';
+import { Input } from '@/component/ui/input';
 import { useMediaQuery } from './useMediaQuery';
 
 /** Tablero de ajedrez CSS que representa la transparencia del overlay dentro de OBS. */
@@ -162,21 +164,17 @@ export default function BuilderShell({
 function ObsExport({ url, onCopy }: { url: string; onCopy: () => void }) {
     return (
         <div className="pt-4 border-t border-border space-y-2">
-            <input
+            <Input
                 type="text"
                 readOnly
                 value={url}
                 onFocus={(e) => e.currentTarget.select()}
                 aria-label="URL del overlay"
-                className="w-full bg-bg-2 border border-border rounded-xl p-2.5 text-muted text-xs font-mono focus:outline-none focus:ring-2 focus:ring-neon/50"
+                className="text-muted text-xs font-mono"
             />
-            <button
-                type="button"
-                onClick={onCopy}
-                className="w-full py-3 bg-neon text-bg rounded-xl font-bold transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-neon/50"
-            >
+            <Button type="button" onClick={onCopy} className="w-full font-bold">
                 Copiar URL para OBS
-            </button>
+            </Button>
             <p className="text-xs text-muted">
                 Agregá una fuente de navegador en OBS con esta URL (1920x1080).
             </p>
@@ -195,12 +193,8 @@ export function PreviewButton({
     className?: string;
 }) {
     return (
-        <button
-            type="button"
-            onClick={onClick}
-            className={`px-3 py-1.5 bg-bg-2 border border-border hover:border-neon hover:text-neon text-text rounded-xl text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-neon/50 ${className ?? ''}`}
-        >
+        <Button type="button" variant="outline" size="sm" onClick={onClick} className={className}>
             {children}
-        </button>
+        </Button>
     );
 }
