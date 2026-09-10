@@ -1,126 +1,156 @@
-import type { Message } from "@/contexts/messagesContext";
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { ChatMessageEvent } from "@/lib/events/types";
 import { hexToRgb } from "@/lib/colots";
 import type { CustomStyles } from "./index";
-import { KickMessageType, TwitchMessageType, YoutubeMessageType } from "@/type";
 
-export function Message({ message, styles }: { message: Message, styles: CustomStyles }) {
-  if (message.platform === 'twitch') {
-    return <TwitchMessage message={message} styles={styles} />;
-  }
-  if (message.platform === 'kick') {
-    return <KickMessage message={message} styles={styles} />;
-  }
-  if (message.platform === 'youtube') {
-    return <YoutubeMessage message={message} styles={styles} />;
-  }
-  return null;
-}
+export function Message({
+  message,
+  styles,
+  layout,
+  ttl,
+}: {
+  message: ChatMessageEvent;
+  styles: CustomStyles;
+  layout?: "horizontal" | "vertical";
+  ttl?: number;
+}) {
+  const [visible, setVisible] = useState(true);
 
-function TwitchMessage({ message, styles }: { message: TwitchMessageType, styles: CustomStyles }) {
+  useEffect(() => {
+    if (ttl) {
+      const timer = setTimeout(() => setVisible(false), ttl);
+      return () => clearTimeout(timer);
+    }
+  }, [ttl]);
+
+  if (!visible) return null;
+
   return (
     <DefaultMessage
       message={{
-        username: message.userstate.username!,
-        color: message.userstate.color,
-        message: message.message,
-        platform: 'twitch',
+        username: message.actor.displayName || message.actor.username,
+        color: message.actor.color,
+        message: message.text,
+        platform: message.platform,
       }}
       styles={styles}
+      layout={layout}
     />
   );
 }
 
-function KickMessage({ message, styles }: { message: KickMessageType, styles: CustomStyles }) {
-  return (
-    <DefaultMessage
-      message={{
-        username: message.sender.username,
-        color: message.sender.identity.color,
-        message: message.message,
-        platform: 'kick',
-      }}
-      styles={styles}
-    />
-  )
-}
-
-function YoutubeMessage({ message, styles }: { message: YoutubeMessageType, styles: CustomStyles }) {
-  return (
-    <DefaultMessage
-      message={{
-        username: message.username,
-        color: undefined, // YouTube messages don't have a color
-        message: message.message,
-        platform: 'youtube',
-      }}
-      styles={styles}
-    />
-  );
-}
-
-const DefaultMessage = ({ message, styles } : { message: {
-  username: string;
-  color?: string;
-  message: string;
-  platform: string;
-}, styles: CustomStyles }) => {
+const DefaultMessage = ({
+  message,
+  styles,
+  layout,
+}: {
+  message: {
+    username: string;
+    color?: string;
+    message: string;
+    platform: string;
+  };
+  styles: CustomStyles;
+  layout?: "horizontal" | "vertical";
+}) => {
   const PLATFORM_ICONS: Record<string, string> = {
-    twitch: "./twitch.png",
-    kick: "./kick.ico",
-    youtube: "./youtube.png",
-  }
+    twitch: "/twitch.png",
+    kick: "/kick.ico",
+    youtube: "/youtube.png",
+  };
 
   const PLATFORM_COLORS: Record<string, string> = {
-    twitch: "linear-gradient(120deg, rgba(145,70,255,0.2) 0%, rgba(145,70,255,0.5) 100%)",
-    kick: "linear-gradient(120deg, rgba(83,252,24,0.2) 0%, rgba(83,252,24,0.5) 100%)",
-    youtube: "linear-gradient(120deg, rgba(255,0,0,0.2) 0%, rgba(255,0,0,0.5) 100%)"
-  }
+    twitch: "var(--twitch, #9146FF)",
+    kick: "var(--kick, #53FC18)",
+    youtube: "var(--youtube, #FF0033)",
+  };
 
-  const colorAsRgb = hexToRgb(message.color || '#000000')!;
-  const color = !message.color
-    ? PLATFORM_COLORS[message.platform]
-    : `linear-gradient(120deg, rgba(${colorAsRgb.r}, ${colorAsRgb.g}, ${colorAsRgb.b}, 0.2) 0%, rgba(${colorAsRgb.r}, ${colorAsRgb.g}, ${colorAsRgb.b}, 0.5) 100%)`;
+  const platformColor = PLATFORM_COLORS[message.platform] || "var(--neon, #8B5CF6)";
+
+  const colorAsRgb = message.color ? hexToRgb(message.color) : null;
+  const userColor = colorAsRgb
+    ? `rgb(${colorAsRgb.r}, ${colorAsRgb.g}, ${colorAsRgb.b})`
+    : platformColor;
+
+  const defaultBackground = "rgba(18, 18, 29, 0.85)";
+  const hasCustomBg = !!styles["message-background"];
+  const hasCustomTextShadow = !!styles["message-text-shadow"];
 
   return (
-    <div
-      className="px-4 py-2 message flex gap-2 items-center justify-center"
+    <motion.div
+      layout="position"
+      initial={{ opacity: 0, x: layout === 'vertical' ? 0 : 20, y: layout === 'vertical' ? 20 : 0 }}
+      animate={{ opacity: 1, x: 0, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      className={`message flex items-center gap-3 px-4 py-2 ${
+        layout === "vertical" ? "w-full max-w-sm mb-2" : ""
+      }`}
       style={{
-        background: styles["message-background"] || color,
-        color: styles['message-color'] || undefined,
-        fontWeight: styles['message-font-weight'] || undefined,
-        fontSize: styles['message-font-size'] || undefined,
-        fontFamily: styles['message-font-family'] || undefined,
-        textDecoration: styles['message-text-decoration'] || undefined,
+        background: styles["message-background"] || defaultBackground,
+        backdropFilter: hasCustomBg ? undefined : "blur(8px)",
+        border: hasCustomBg ? undefined : `1px solid rgba(255,255,255,0.08)`,
+        borderLeft: hasCustomBg ? undefined : `3px solid ${userColor}`,
+        boxShadow: styles["message-box-shadow"] || (hasCustomBg ? undefined : "0 4px 12px rgba(0, 0, 0, 0.5)"),
+        color: styles["message-color"] || "var(--text, #EDEDF5)",
+        fontWeight: styles["message-font-weight"] || "500",
+        fontSize: styles["message-font-size"] || "0.95rem",
+        fontFamily: styles["message-font-family"] || "var(--font-inter), sans-serif",
+        textDecoration: styles["message-text-decoration"] || undefined,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        textTransform: styles['message-text-transform'] as any || undefined,
-        textShadow: styles['message-text-shadow'] || undefined,
-        borderRadius: styles['message-border-radius'] || "0.25rem",
-        padding: styles['message-padding'] || undefined,
-        margin: styles['message-margin'] || undefined,
-        boxShadow: styles['message-box-shadow'] || undefined,
-        lineHeight: styles['message-line-height'] || undefined,
-        letterSpacing: styles['message-letter-spacing'] || undefined,
-        wordSpacing: styles['message-word-spacing'] || undefined,
+        textTransform: (styles["message-text-transform"] as any) || undefined,
+        textShadow: styles["message-text-shadow"] || "0px 1px 2px rgba(0,0,0,0.8)",
+        borderRadius: styles["message-border-radius"] || "0.5rem",
+        padding: styles["message-padding"] || undefined,
+        margin: styles["message-margin"] || undefined,
+        lineHeight: styles["message-line-height"] || "1.4",
+        letterSpacing: styles["message-letter-spacing"] || undefined,
+        wordSpacing: styles["message-word-spacing"] || undefined,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        textAlign: styles['message-text-align'] as any || "left",
-        textOverflow: styles['message-text-overflow'] || undefined,
-        whiteSpace: styles['message-white-space'] || "nowrap",
+        textAlign: (styles["message-text-align"] as any) || "left",
+        textOverflow: styles["message-text-overflow"] || undefined,
+        whiteSpace:
+          styles["message-white-space"] || (layout === "vertical" ? "normal" : "nowrap"),
+        wordBreak: layout === "vertical" ? "break-word" : undefined,
       }}
     >
-      <div className="h-5 w-5 flex items-center justify-center rounded overflow-hidden">
-        <img src={PLATFORM_ICONS[message.platform]} alt={message.platform} />
+      <div className="flex-shrink-0 h-6 w-6 rounded-full overflow-hidden flex items-center justify-center bg-black/40 border border-white/10 shadow-inner">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={PLATFORM_ICONS[message.platform]}
+          alt={message.platform}
+          className="w-3.5 h-3.5 object-contain drop-shadow-md"
+        />
       </div>
       <div
-        className="font-bold flex items-center justify-between w-fit"
-        style={{
-          color: styles['username-color'] || undefined,
-          fontWeight: styles['username-font-weight'] || 'bold',
-          fontSize: styles['username-font-size'] || undefined,
-        }}
+        className={`${
+          layout === "vertical"
+            ? "flex flex-col items-start gap-0.5"
+            : "flex items-center gap-2"
+        } flex-1 min-w-0`}
       >
-        {message.username}
+        <div
+          className="font-title flex-shrink-0"
+          style={{
+            color: styles["username-color"] || userColor,
+            fontWeight: styles["username-font-weight"] || "700",
+            fontSize: styles["username-font-size"] || "1rem",
+            textShadow: hasCustomTextShadow ? undefined : "0px 1px 3px rgba(0,0,0,0.9)",
+            // If they provided a global font family in styles['message-font-family'], we shouldn't hardcode title font here if they want everything uniform?
+            // Wait, CustomStyles doesn't have `username-font-family`.
+            fontFamily: "var(--font-chakra), sans-serif",
+            letterSpacing: "0.02em",
+          }}
+        >
+          {message.username}
+        </div>
+        <div
+          className={`${layout === "vertical" ? "w-full" : ""}`}
+        >
+          {message.message}
+        </div>
       </div>
-      {message.message}
-    </div>
+    </motion.div>
   );
-}
+};

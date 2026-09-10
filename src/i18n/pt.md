@@ -7,25 +7,25 @@ Chatich é uma aplicação web que exibe mensagens de chat ao vivo dos canais da
 1. **Chat da Twitch**  
   Para exibir mensagens do chat da Twitch, adicione o parâmetro `twitch`. Exemplo: Exibir o chat do canal da Twitch `ninja`:
   ```
-  {{PAGE}}/chat?twitch=ninja
+  {{PAGE}}/overlay/chat?twitch=ninja
   ```
 
 2. **Chat da Kick**  
   Para exibir mensagens do chat da Kick, adicione o parâmetro `kick`. Exemplo: Exibir o chat do canal da Kick `ninja`:
   ```
-  {{PAGE}}/chat?kick=ninja
+  {{PAGE}}/overlay/chat?kick=ninja
   ```
 
 3. **Chat do YouTube**  
   Para exibir mensagens do chat ao vivo do YouTube, adicione o parâmetro `youtube`. Exemplo: Exibir o chat do vídeo ao vivo do YouTube com ID `ninja`:
   ```
-  {{PAGE}}/chat?youtube=ninja
+  {{PAGE}}/overlay/chat?youtube=ninja
   ```
 
 4. **Combinando chats da Twitch, Kick e YouTube**  
   Você pode combinar chats da Twitch, Kick e YouTube em uma única visualização usando múltiplos parâmetros na URL. Por exemplo:
   ```
-  {{PAGE}}/chat?twitch=ninja&kick=ninja&youtube=ninja
+  {{PAGE}}/overlay/chat?twitch=ninja&kick=ninja&youtube=ninja
   ```
 
 ## Como personalizar a aparência do chat
@@ -44,7 +44,7 @@ Chatich é uma aplicação web que exibe mensagens de chat ao vivo dos canais da
 
   **Exemplo:**
   ```
-  {{PAGE}}/chat?twitch=ninja&styles=%7B%22message-background%22%3A%22%23f0f0f0%22%2C%22username-color%22%3A%22%23ff0000%22%7D
+  {{PAGE}}/overlay/chat?twitch=ninja&styles=%7B%22message-background%22%3A%22%23f0f0f0%22%2C%22username-color%22%3A%22%23ff0000%22%7D
   ```
   (O valor de `styles` é um objeto JSON codificado na URL.)
 

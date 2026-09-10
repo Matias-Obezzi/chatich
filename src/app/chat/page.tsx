@@ -1,35 +1,19 @@
-import { KickContextProvider } from "@/contexts/kickContext";
-import { MessagesContextProvider } from "@/contexts/messagesContext";
-import { TmiContextProvider } from "@/contexts/tmiContext";
-import { YoutubeContextProvider } from "@/contexts/youtubeContext";
-import { getContext } from "@/lib/context";
-import { redirect } from "next/navigation";
-import { ChatViewClient } from "@/component/chat"
+import { redirect } from 'next/navigation';
 
-export default async function Chat() {
-  const context = await getContext();
-  const params = new URLSearchParams(context.search);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const providers : React.FC<any>[] = [];
-  if (params.has("twitch")) {
-    providers.push(TmiContextProvider);
+export default async function ChatPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const sp = await searchParams;
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(sp)) {
+    if (Array.isArray(value)) {
+      value.forEach((v) => query.append(key, v));
+    } else if (value !== undefined) {
+      query.append(key, value);
+    }
   }
-  if (params.has("youtube")) {
-    providers.push(YoutubeContextProvider);
-  }
-  if (params.has("kick")) {
-    providers.push(KickContextProvider);
-  }
-  if (providers.length === 0) {
-    redirect('/');
-    return;
-  }
-  return [MessagesContextProvider, ...providers].reduceRight(
-    (children, Provider) => (
-      <Provider {...({ isChat: true })}>
-        {children}
-      </Provider>
-    ),
-    <ChatViewClient />
-  );
+  const queryString = query.toString();
+  redirect(`/overlay/chat${queryString ? `?${queryString}` : ''}`);
 }
