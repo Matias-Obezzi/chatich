@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arquitectura y Roadmap - Chatich</title>
+<style>
+:root {
+  --bg: #08080f;
+  --surface: #12121c;
+  --surface-2: #1a1a28;
+  --border: rgba(255, 255, 255, 0.08);
+  --text: #ECECF1;
+  --muted: #9A9AB0;
+  --accent: #7C5CFF;
+  --twitch: #9146FF;
+  --kick: #53FC18;
+  --youtube: #FF0033;
+  --spotify: #1DB954;
+  --apple: #FC3C44;
+  --radius: 14px;
+  --font: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, 'Cascadia Code', 'Fira Code', monospace;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+* { box-sizing: border-box; }
+
+h1, h2, h3, h4 { color: #fff; font-weight: 600; margin-top: 0; }
+h1 { font-size: 2.2rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; }
+h2 { font-size: 1.5rem; margin: 3rem 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem; }
+h2::before { content: '#'; color: var(--accent); }
+
+a { color: var(--accent); text-decoration: none; }
+
+.layout {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 3rem;
+  align-items: start;
+}
+
+/* Nav sidebar */
+nav.sidebar { position: sticky; top: 2rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem 1rem; }
+nav.sidebar ul { list-style: none; padding: 0; margin: 0; }
+nav.sidebar li { margin-bottom: 0.25rem; }
+nav.sidebar a {
+  color: var(--muted);
+  display: block;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+nav.sidebar a:hover, nav.sidebar a.active { background: var(--surface-2); color: #fff; }
+
+.main-content { min-width: 0; }
+section { margin-bottom: 4rem; scroll-margin-top: 3rem; }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; }
+
+/* Code Blocks */
+.pre-code {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  background: var(--surface-2);
+  padding: 1.25rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  margin: 1rem 0;
+  color: #abb2bf;
+}
+.kw { color: #c678dd; } .type { color: #e5c07b; } .str { color: #98c379; } .comment { color: #5c6370; } .func { color: #61afef; } .prop { color: #e06c75; } .num { color: #d19a66; }
+
+/* Diagram */
+.diagram-wrapper { display: flex; gap: 1.5rem; align-items: stretch; margin-bottom: 2rem; flex-wrap: wrap; }
+.diagram-svg { flex: 1; min-width: 500px; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); }
+.diagram-svg .node { cursor: pointer; }
+.diagram-svg .node rect { fill: var(--surface-2); stroke: var(--border); stroke-width: 2; transition: all 0.2s; rx: 8; ry: 8; }
+.diagram-svg .node:hover rect, .diagram-svg .node.active rect { stroke: var(--accent); fill: #202030; }
+.diagram-svg text { fill: var(--text); font-family: var(--font); font-size: 13px; font-weight: 500; pointer-events: none; }
+.diagram-svg .subtext { fill: var(--muted); font-size: 11px; }
+.diagram-svg .link { fill: none; stroke: var(--muted); stroke-width: 2; marker-end: url(#arrow); opacity: 0.6; }
+.diagram-svg .link:hover { stroke: var(--accent); opacity: 1; }
+
+.side-panel {
+  width: 320px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+.side-panel-header { font-family: var(--mono); color: var(--accent); font-size: 0.85rem; margin-bottom: 1rem; word-break: break-all; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+.side-panel-content { font-size: 0.9rem; color: var(--muted); }
+.side-panel-title { color: #fff; font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem; }
+
+/* Tech Debt Filters */
+.filters { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.filter-btn { background: var(--surface); color: var(--text); border: 1px solid var(--border); padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; transition: 0.2s; font-family: var(--font); font-size: 0.9rem; }
+.filter-btn:hover { background: var(--surface-2); }
+.filter-btn.active { background: rgba(124, 92, 255, 0.15); color: #fff; border-color: var(--accent); }
+
+/* Badges */
+.badge { display: inline-flex; align-items: center; padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.badge.alta { background: rgba(255, 0, 51, 0.15); color: #ff4d6d; border: 1px solid rgba(255, 0, 51, 0.3); }
+.badge.media { background: rgba(255, 170, 0, 0.15); color: #ffc233; border: 1px solid rgba(255, 170, 0, 0.3); }
+.badge.baja { background: rgba(124, 92, 255, 0.15); color: #b399ff; border: 1px solid rgba(124, 92, 255, 0.3); }
+
+.debt-item { display: block; margin-bottom: 1.5rem; background: var(--surface); padding: 1.5rem; border-radius: var(--radius); border: 1px solid var(--border); }
+.debt-item.hidden { display: none; }
+.debt-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; gap: 1rem; }
+.debt-header h3 { margin: 0; font-size: 1.1rem; flex: 1; }
+.debt-desc { color: var(--muted); font-size: 0.95rem; margin: 0 0 1rem 0; }
+.debt-correction { background: rgba(124, 92, 255, 0.05); border-left: 3px solid var(--accent); padding: 1rem; border-radius: 4px; font-size: 0.9rem; margin-top: 1rem; }
+.debt-correction p { margin: 0; color: var(--text); }
+
+/* Timeline */
+.timeline { position: relative; padding-left: 2rem; margin: 2rem 0; }
+.timeline::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--border); }
+.phase { position: relative; margin-bottom: 1.5rem; }
+.phase::before { content: ''; position: absolute; left: -2.35rem; top: 1rem; width: 14px; height: 14px; border-radius: 50%; background: var(--surface); border: 2px solid var(--muted); transition: all 0.2s; z-index: 2; }
+.phase:hover::before, .phase.active::before { border-color: var(--accent); background: var(--accent); }
+.phase-header { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.5rem; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; }
+.phase-header:hover { border-color: rgba(255,255,255,0.2); }
+.phase-header-top { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+.phase-header h3 { margin: 0; font-size: 1.1rem; color: #fff; }
+.phase-effort { font-size: 0.8rem; color: var(--muted); background: var(--surface-2); padding: 0.2rem 0.6rem; border-radius: 20px; border: 1px solid var(--border); }
+.phase-header p { margin: 0.5rem 0 0 0; color: var(--muted); font-size: 0.9rem; }
+.phase-body { display: none; background: var(--surface-2); border: 1px solid var(--border); border-top: none; border-radius: 0 0 8px 8px; padding: 1.5rem; margin-top: -4px; font-size: 0.95rem; }
+.phase.active .phase-header { border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-color: var(--accent); background: #151522; }
+.phase.active .phase-body { display: block; border-color: var(--accent); }
+
+/* Decision Cards */
+.decision-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; }
+.decision-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; display: flex; flex-direction: column; }
+.decision-card h3 { margin: 0 0 1rem 0; font-size: 1.1rem; }
+.decision-options { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.75rem; flex: 1; }
+.decision-option { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; font-size: 0.9rem; }
+.decision-option strong { display: block; color: var(--accent); margin-bottom: 0.25rem; font-size: 0.95rem; }
+.decision-option p { margin: 0; color: var(--muted); }
+
+/* Utilities */
+.platform-color.twitch { color: var(--twitch); }
+.platform-color.kick { color: var(--kick); }
+.platform-color.youtube { color: var(--youtube); }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <nav class="sidebar">
+    <ul>
+      <li><a href="#arquitectura" class="active">Arquitectura Actual</a></li>
+      <li><a href="#auditoria">Deuda Técnica</a></li>
+      <li><a href="#objetivo">Arquitectura Objetivo</a></li>
+      <li><a href="#roadmap">Roadmap por Fases</a></li>
+      <li><a href="#decisiones">Decisiones Abiertas</a></li>
+    </ul>
+  </nav>
+
+  <main class="main-content">
+    <h1>Arquitectura y Roadmap</h1>
+    
+    <section id="arquitectura">
+      <h2>Arquitectura actual</h2>
+      <p style="color: var(--muted)">Flujo de inyección de providers basado en la lectura interactiva del código. Hacé clic en los nodos para inspeccionar los archivos reales.</p>
+      
+      <div class="diagram-wrapper">
+        <svg class="diagram-svg" viewBox="0 0 700 450">
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--muted)" />
+            </marker>
+          </defs>
+
+          <!-- Links -->
+          <path class="link" d="M 120 40 L 120 80" />
+          <path class="link" d="M 190 110 L 280 110" />
+          <path class="link" d="M 190 120 L 280 180" />
+          <path class="link" d="M 190 130 L 280 250" />
+          <path class="link" d="M 190 140 L 120 300" />
+          
+          <path class="link" d="M 520 110 L 420 110" />
+          <path class="link" d="M 520 180 L 420 180" />
+          <path class="link" d="M 520 250 L 420 250" />
+          
+          <path class="link" d="M 280 120 C 200 120, 150 250, 120 290" />
+          <path class="link" d="M 280 190 C 200 190, 150 250, 120 300" />
+          <path class="link" d="M 280 260 C 200 260, 150 250, 120 310" />
+          
+          <path class="link" d="M 120 340 L 120 380" />
+
+          <!-- Nodes -->
+          <g class="node" onclick="showNode('qs')">
+            <rect x="50" y="10" width="140" height="30" />
+            <text x="120" y="30" text-anchor="middle">?twitch=&kick=</text>
+          </g>
+
+          <g class="node" onclick="showNode('page')">
+            <rect x="50" y="80" width="140" height="80" />
+            <text x="120" y="115" text-anchor="middle">page.tsx</text>
+            <text class="subtext" x="120" y="135" text-anchor="middle">reduceRight wrapper</text>
+          </g>
+
+          <g class="node" onclick="showNode('msg')">
+            <rect x="50" y="300" width="140" height="40" />
+            <text x="120" y="325" text-anchor="middle">MessagesContext</text>
+          </g>
+
+          <g class="node" onclick="showNode('view')">
+            <rect x="50" y="380" width="140" height="40" />
+            <text x="120" y="405" text-anchor="middle">ChatViewClient</text>
+          </g>
+
+          <g class="node" onclick="showNode('tmiCtx')">
+            <rect x="280" y="90" width="140" height="40" />
+            <text x="350" y="115" text-anchor="middle" class="platform-color twitch">TmiContext</text>
+          </g>
+          
+          <g class="node" onclick="showNode('tmiJs')">
+            <rect x="520" y="90" width="120" height="40" />
+            <text x="580" y="115" text-anchor="middle">tmi.js (WS)</text>
+          </g>
+
+          <g class="node" onclick="showNode('kickCtx')">
+            <rect x="280" y="160" width="140" height="40" />
+            <text x="350" y="185" text-anchor="middle" class="platform-color kick">KickContext</text>
+          </g>
+
+          <g class="node" onclick="showNode('kickWs')">
+            <rect x="520" y="160" width="120" height="40" />
+            <text x="580" y="185" text-anchor="middle">kickChat (WS)</text>
+          </g>
+
+          <g class="node" onclick="showNode('ytCtx')">
+            <rect x="280" y="230" width="140" height="40" />
+            <text x="350" y="255" text-anchor="middle" class="platform-color youtube">YoutubeContext</text>
+          </g>
+
+          <g class="node" onclick="showNode('ytApi')">
+            <rect x="520" y="230" width="120" height="40" />
+            <text x="580" y="255" text-anchor="middle">route.ts (Poll)</text>
+          </g>
+
+        </svg>
+
+        <div class="side-panel" id="sidePanel">
+          <div class="side-panel-title">Seleccioná un nodo</div>
+          <div class="side-panel-content">Hacé clic en cualquier elemento del diagrama para ver su función en el código real.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="auditoria">
+      <h2>Auditoría de deuda técnica</h2>
+      
+      <div class="filters">
+        <button class="filter-btn active" onclick="filterDebt('all')">Todas</button>
+        <button class="filter-btn" onclick="filterDebt('alta')">Alta Severidad</button>
+        <button class="filter-btn" onclick="filterDebt('media')">Media</button>
+        <button class="filter-btn" onclick="filterDebt('baja')">Baja</button>
+      </div>
+
+      <div class="debt-list">
+        
+        <div class="debt-item" data-sev="alta">
+          <div class="debt-header">
+            <h3>Lógica rota en removeMessage</h3>
+            <span class="badge alta">Severidad Alta</span>
+          </div>
+          <p class="debt-desc">La condición de borrado es <code>msg.platform !== platform && msg.hash !== hash</code>. Si se manda a borrar un mensaje de Kick con hash 123, otro mensaje distinto de Twitch con hash 456 se evalúa como <code>'twitch' !== 'kick' && 456 !== 123</code> que es <code>true && true = true</code> (se conserva). PERO cualquier mensaje de Kick, sin importar el hash, se evalúa con <code>false && ... = false</code> y se elimina por completo. Borrar un solo mensaje limpia todo el chat de esa plataforma.</p>
+          <div class="pre-code">
+<span class="comment">// src/contexts/messagesContext.tsx</span>
+<span class="kw">const</span> <span class="func">removeMessage</span> = (<span class="prop">platform</span>: <span class="type">MessagePlatform</span>, <span class="prop">hash</span>: <span class="type">number</span>) => {
+  <span class="func">setMessages</span>((prev) => prev.<span class="func">filter</span>(msg => msg.<span class="prop">platform</span> !== platform && msg.<span class="prop">hash</span> !== hash));
+};</div>
+          <div class="debt-correction">
+            <p><strong>Corrección:</strong> Usar la negación de la condición exacta: <code>!(msg.platform === platform && msg.hash === hash)</code>.</p>
+          </div>
+        </div>
+
+        <div class="debt-item" data-sev="alta">
+          <div class="debt-header">
+            <h3>Fuga de memoria por array sin límite</h3>
+            <span class="badge alta">Severidad Alta</span>
+          </div>
+          <p class="debt-desc">El estado <code>messages</code> pushea todo mensaje nuevo sin recortar los viejos. En streams largos, acumula miles de nodos en memoria y fuerza a React a hacer diffs inmensos degradando el render.</p>
+          <div class="pre-code">
+<span class="comment">// src/contexts/messagesContext.tsx</span>
+<span class="func">setMessages</span>((prev) => {
+  <span class="kw">if</span> (!prev.<span class="func">some</span>(msg => msg.<span class="prop">hash</span> === message.<span class="prop">hash</span> && msg.<span class="prop">platform</span> === message.<span class="prop">platform</span>)) {
+    <span class="kw">return</span> [...prev, message];
+  }
+  <span class="kw">return</span> prev;
+});</div>
+          <div class="debt-correction">
+            <p><strong>Corrección:</strong> Implementar un cap (ej: mantener últimos 100) y/o TTL temporal (borrar de la cola visual tras 30-60 segs).</p>
+          </div>
+        </div>
+
+        <div class="debt-item" data-sev="media">
+          <div class="debt-header">
+            <h3>Estados de carga visibles en OBS</h3>
+            <span class="badge media">Severidad Media</span>
+          </div>
+          <p class="debt-desc">Los providers de Kick y Twitch renderizan un div de carga si aún no inicializaron. Al usar <code>reduceRight</code>, los providers envuelven a <code>ChatViewClient</code> en el DOM. Esos divs bloquean y se renderizan sobre la pantalla limpia que captura OBS.</p>
+          <div class="pre-code">
+<span class="comment">// src/contexts/tmiContext.tsx</span>
+<span class="kw">if</span> (loading) {
+  <span class="kw">return</span> &lt;<span class="type">div</span>&gt;Loading twitch client...&lt;/<span class="type">div</span>&gt;;
+}</div>
+          <div class="debt-correction">
+            <p><strong>Corrección:</strong> Proveer el estado de conexión a través del contexto en lugar de bloquear el árbol de renderizado del componente envolvente.</p>
+          </div>
+        </div>
+
+        <div class="debt-item" data-sev="media">
+          <div class="debt-header">
+            <h3>Falta de cleanup en EventEmitter</h3>
+            <span class="badge media">Severidad Media</span>
+          </div>
+          <p class="debt-desc">La clase propia de eventos carece de función <code>off</code>. Esto genera un leak de listeners si un componente se monta múltiples veces (ej. StrictMode de React), multiplicando la ejecución de handlers.</p>
+          <div class="pre-code">
+<span class="comment">// src/lib/eventEmitter.ts</span>
+<span class="kw">export class</span> <span class="type">EventEmitter</span> {
+  <span class="comment">// No hay método 'off' o 'removeListener'</span>
+  <span class="func">on</span>(<span class="prop">event</span>: <span class="type">string</span>, <span class="prop">listener</span>: (...<span class="prop">args</span>: <span class="type">any</span>[]) => <span class="type">void</span>) { ... }
+}</div>
+          <div class="debt-correction">
+            <p><strong>Corrección:</strong> Agregar un método <code>off(event, listener)</code> o que <code>on</code> devuelva una función desuscriptora.</p>
+          </div>
+        </div>
+
+        <div class="debt-item" data-sev="baja">
+          <div class="debt-header">
+            <h3>Uso bloqueante de window.location</h3>
+            <span class="badge baja">Severidad Baja</span>
+          </div>
+          <p class="debt-desc">Se lee el querystring usando el objeto global de ventana en el <code>useEffect</code> (con dependencias vacías), ignorando <code>useSearchParams</code>. Rompe con paradigmas de ruteo de Next.</p>
+          <div class="pre-code">
+<span class="comment">// src/contexts/kickContext.tsx</span>
+<span class="kw">const</span> <span class="prop">channel</span> = <span class="kw">new</span> <span class="type">URLSearchParams</span>(window.<span class="prop">location</span>.<span class="prop">search</span>).<span class="func">get</span>(<span class="str">'kick'</span>);</div>
+          <div class="debt-correction">
+            <p><strong>Corrección:</strong> Usar <code>const searchParams = useSearchParams()</code> y añadirlo a las dependencias, o pasar los canales requeridos directamente por props.</p>
+          </div>
+        </div>
+
+        <div class="debt-item" data-sev="baja">
+          <div class="debt-header">
+            <h3>Parseos desperdiciados en Kick</h3>
+            <span class="badge baja">Severidad Baja</span>
+          </div>
+          <p class="debt-desc"><code>parser.ts</code> procesa eventos de subscripciones, hosts y encuestas de Kick, pero el consumidor en <code>kickContext.tsx</code> descarta todo lo que no sea <code>ChatMessage</code>.</p>
+          <div class="pre-code">
+<span class="comment">// src/lib/kickChat/parser.ts</span>
+<span class="kw">case</span> <span class="str">"App\\Events\\SubscriptionEvent"</span>: { ... }
+<span class="kw">case</span> <span class="str">"App\\Events\\GiftedSubscriptionsEvent"</span>: { ... }</div>
+          <div class="debt-correction">
+            <p><strong>Corrección:</strong> Aunque no es perjudicial ahora, estos eventos deben conectarse con el sistema futuro de alertas.</p>
+          </div>
+        </div>
+
+        <div class="debt-item" data-sev="baja">
+          <div class="debt-header">
+            <h3>Typos y 'any' con eslint-disable</h3>
+            <span class="badge baja">Severidad Baja</span>
+          </div>
+          <p class="debt-desc">Archivo mal nombrado <code>colots.ts</code>. Abuso ocasional de puentear Typescript.</p>
+          <div class="pre-code">
+<span class="comment">// src/app/chat/page.tsx</span>
+<span class="comment">// eslint-disable-next-line @typescript-eslint/no-explicit-any</span>
+<span class="kw">const</span> <span class="prop">providers</span> : <span class="type">React.FC</span>&lt;<span class="type">any</span>&gt;[] = [];</div>
+          <div class="debt-correction">
+            <p><strong>Corrección:</strong> Renombrar a <code>colors.ts</code>. Tipar <code>providers</code> como un React Context Provider genérico.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section id="objetivo">
+      <h2>Arquitectura objetivo</h2>
+      <p style="color: var(--muted)">El núcleo pasará de un estado acoplado a React Context a un <strong>Bus de Eventos</strong> central (EventBus) agnóstico de UI. Los clientes (Kick, Tmi, YT) actúan como <em>Adapters</em> que emiten <code>StreamEvent</code>, y un Registry de overlays (montado en <code>/overlay/[type]</code>) consume lo que necesita.</p>
+      
+      <div class="pre-code">
+<span class="kw">export type</span> <span class="type">StreamEvent</span> = 
+  | { <span class="prop">type</span>: <span class="str">'chat.message'</span>; <span class="prop">payload</span>: <span class="type">ChatMessage</span> }
+  | { <span class="prop">type</span>: <span class="str">'chat.delete'</span>; <span class="prop">payload</span>: { <span class="prop">messageId</span>: <span class="type">string</span> } }
+  | { <span class="prop">type</span>: <span class="str">'sub'</span> | <span class="str">'sub.gift'</span> | <span class="str">'follow'</span> | <span class="str">'raid'</span> | <span class="str">'cheer'</span>; <span class="prop">payload</span>: <span class="type">AlertPayload</span> }
+  | { <span class="prop">type</span>: <span class="str">'music.nowplaying'</span> | <span class="str">'music.changed'</span>; <span class="prop">payload</span>: <span class="type">TrackInfo</span> };
+
+<span class="kw">export interface</span> <span class="type">OverlayDefinition</span> {
+  <span class="prop">id</span>: <span class="type">string</span>;
+  <span class="prop">name</span>: <span class="type">string</span>;
+  <span class="prop">component</span>: <span class="type">React.ComponentType</span>&lt;<span class="type">any</span>&gt;;
+  <span class="prop">events</span>: <span class="type">StreamEvent</span>[<span class="str">'type'</span>][];
+  <span class="prop">defaultConfig</span>?: <span class="type">Record</span>&lt;<span class="type">string</span>, <span class="type">unknown</span>&gt;;
+}
+      </div>
+    </section>
+
+    <section id="roadmap">
+      <h2>Roadmap por fases</h2>
+      <div class="timeline">
+        
+        <div class="phase" onclick="togglePhase(this)">
+          <div class="phase-header">
+            <div class="phase-header-top">
+              <h3>Fase 0: Arreglo de deuda y estabilidad</h3>
+              <span class="phase-effort">Esfuerzo: Bajo</span>
+            </div>
+            <p>Arreglar bugs críticos que impiden streams largos sin problemas.</p>
+          </div>
+          <div class="phase-body">
+            Solucionar el borrado agresivo de `removeMessage`. Implementar un límite flexible de ~100 mensajes usando slice en el setter de React. Renombrar typo `colots.ts`. Arreglar el `Loading` visible en OBS renderizándolo condicionalmente sin interrumpir `children`.
+          </div>
+        </div>
+
+        <div class="phase" onclick="togglePhase(this)">
+          <div class="phase-header">
+            <div class="phase-header-top">
+              <h3>Fase 1: Bus de Eventos y Registry</h3>
+              <span class="phase-effort">Esfuerzo: Medio</span>
+            </div>
+            <p>Migración de la arquitectura estructural.</p>
+          </div>
+          <div class="phase-body">
+            Crear EventBus reemplazando `EventEmitter` con tipado estricto `on/off/emit`. Definir type union `StreamEvent`. Desacoplar tmi/kick/yt para ser meros conectores al Bus. Reestructurar rutas hacia `/overlay/[type]` con alias legacy a `/chat`.
+          </div>
+        </div>
+
+        <div class="phase" onclick="togglePhase(this)">
+          <div class="phase-header">
+            <div class="phase-header-top">
+              <h3>Fase 2: Overlay de Alertas</h3>
+              <span class="phase-effort">Esfuerzo: Medio-Alto</span>
+            </div>
+            <p>Consumo de los parsers de Kick abandonados y subscripciones de Twitch.</p>
+          </div>
+          <div class="phase-body">
+            Crear el widget de alertas visuales. Requiere implementar una cola (Queue) ya que las animaciones visuales tardan y los eventos pueden dispararse en ráfaga (raids, gift bombs).
+          </div>
+        </div>
+
+        <div class="phase" onclick="togglePhase(this)">
+          <div class="phase-header">
+            <div class="phase-header-top">
+              <h3>Fase 3: Contadores y Estadísticas</h3>
+              <span class="phase-effort">Esfuerzo: Bajo</span>
+            </div>
+            <p>Widgets complementarios de menor interacción.</p>
+          </div>
+          <div class="phase-body">
+            Overlays simples basados en métricas: contador de follows, metas de suscripción, medidores de hype. Consumen del EventBus sin encolamiento, solo actúan por pulsos (incrementando valores numéricos con animación simple de odómetro).
+          </div>
+        </div>
+
+        <div class="phase" onclick="togglePhase(this)">
+          <div class="phase-header">
+            <div class="phase-header-top">
+              <h3>Fase 4: Integración de Música</h3>
+              <span class="phase-effort">Esfuerzo: Alto</span>
+            </div>
+            <p>Overlay Now Playing con fallback local y APIs de terceros.</p>
+          </div>
+          <div class="phase-body">
+            Comenzar leyendo del scrobbler público de Last.fm y leyendo archivos locales `current_song.txt` que exportan los reproductores. Luego, añadir integración compleja PKCE para Spotify y Apple Music (requiere setup sever-side).
+          </div>
+        </div>
+
+        <div class="phase" onclick="togglePhase(this)">
+          <div class="phase-header">
+            <div class="phase-header-top">
+              <h3>Fase 5: Studio de configuración</h3>
+              <span class="phase-effort">Esfuerzo: Alto</span>
+            </div>
+            <p>UI para generarle al usuario su URL de fuente de navegador.</p>
+          </div>
+          <div class="phase-body">
+            Panel de control que permite elegir colores, fuentes, espaciados y genera dinámicamente un querystring (o base64 encoded config) para copiar y pegar en OBS.
+          </div>
+        </div>
+
+        <div class="phase" onclick="togglePhase(this)">
+          <div class="phase-header">
+            <div class="phase-header-top">
+              <h3>Fase 6: Temas y Compartición</h3>
+              <span class="phase-effort">Esfuerzo: Medio</span>
+            </div>
+            <p>Exportar y compartir presets creados.</p>
+          </div>
+          <div class="phase-body">
+            Estandarizar las configuraciones visuales en un JSON/Base64 para que un streamer pueda enviarle su "tema" a otro mediante una URL encriptada.
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section id="decisiones">
+      <h2>Decisiones abiertas</h2>
+      
+      <div class="decision-grid">
+        <div class="decision-card">
+          <h3>Configuración de Overlays</h3>
+          <ul class="decision-options">
+            <li class="decision-option">
+              <strong>URL Querystring (Actual)</strong>
+              <p>Fácil de exportar y sin backend, pero URLs demasiado largas ensucian OBS.</p>
+            </li>
+            <li class="decision-option">
+              <strong>Persistencia y Perfiles</strong>
+              <p>URLs limpias vinculadas a una DB/LocalStore, requiere cuentas o local-first storage persistente.</p>
+            </li>
+          </ul>
+        </div>
+
+        <div class="decision-card">
+          <h3>Layer Server-side</h3>
+          <ul class="decision-options">
+            <li class="decision-option">
+              <strong>100% Client-side (Actual)</strong>
+              <p>Menor costo de hosteo, corre en el browser. Bloquea APIs OAuth y Twitch EventSub (requieren webhook).</p>
+            </li>
+            <li class="decision-option">
+              <strong>Backend Next.js Server</strong>
+              <p>Abre las puertas a auth real, pero eleva los costos operativos o fuerza un deploy Vercel/Node real.</p>
+            </li>
+          </ul>
+        </div>
+
+        <div class="decision-card">
+          <h3>Conexión a Kick</h3>
+          <ul class="decision-options">
+            <li class="decision-option">
+              <strong>Cliente propio (Actual)</strong>
+              <p>Control total del websocket Pusher. Riesgo alto de romperse ante un mínimo cambio de API no documentado de Kick.</p>
+            </li>
+            <li class="decision-option">
+              <strong>Usar librería de terceros</strong>
+              <p>Delegar mantenimiento en comunidad, perdiendo flexibilidad inmediata y dependiendo de updates externos.</p>
+            </li>
+          </ul>
+        </div>
+
+        <div class="decision-card">
+          <h3>Motor de Animaciones</h3>
+          <ul class="decision-options">
+            <li class="decision-option">
+              <strong>framer-motion</strong>
+              <p>Ya instalado en React, muy potente y declarativo. Carga CPU al hacer interpolaciones en JavaScript.</p>
+            </li>
+            <li class="decision-option">
+              <strong>CSS Puro / Tailwind transitons</strong>
+              <p>Descarga la animación al compositor del browser (GPU). Clave en overlays de OBS que corren en PCs bajo estrés de encoding.</p>
+            </li>
+          </ul>
+        </div>
+
+        <div class="decision-card">
+          <h3>Alcance del Proyecto</h3>
+          <ul class="decision-options">
+            <li class="decision-option">
+              <strong>Solo Web</strong>
+              <p>Solo un sitio web y rutas web. Simple de mantener, complejo para leer archivos del disco (SMTC/música local).</p>
+            </li>
+            <li class="decision-option">
+              <strong>Monorepo + Desktop App</strong>
+              <p>Wrapper Tauri o Electron para acceso a procesos locales, multiplicando el esfuerzo de mantenimiento.</p>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  // Nav highlight
+  const sections = document.querySelectorAll('section');
+  const navLinks = document.querySelectorAll('.sidebar a');
+  
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(section => {
+      const sectionTop = section.offsetTop;
+      if (scrollY >= sectionTop - 100) {
+        current = section.getAttribute('id');
+      }
+    });
+    navLinks.forEach(a => {
+      a.classList.remove('active');
+      if (a.getAttribute('href').includes(current)) {
+        a.classList.add('active');
+      }
+    });
+  });
+
+  // Timeline toggle
+  function togglePhase(element) {
+    element.classList.toggle('active');
+  }
+
+  // Debt Filter
+  function filterDebt(type) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    document.querySelectorAll('.debt-item').forEach(item => {
+      if (type === 'all' || item.getAttribute('data-sev') === type) {
+        item.classList.remove('hidden');
+      } else {
+        item.classList.add('hidden');
+      }
+    });
+  }
+
+  // Diagram Node Info Data
+  const nodesData = {
+    qs: {
+      title: 'window.location.search',
+      path: 'Navegador',
+      desc: 'Punto de entrada de los canales elegidos. Se parsea directamente en los contextos en lugar de pasarse limpio.'
+    },
+    page: {
+      title: 'Chat Page Wrapper',
+      path: 'src/app/chat/page.tsx',
+      desc: 'El archivo lee el querystring y empaqueta a `ChatViewClient` con un `reduceRight` metiéndolo dentro del árbol de providers que tengan el querystring presente.'
+    },
+    msg: {
+      title: 'MessagesContext',
+      path: 'src/contexts/messagesContext.tsx',
+      desc: 'Maneja el array infinito de mensajes `addMessage` y `removeMessage` (cuyo bug borra todo si coinciden hashes).'
+    },
+    view: {
+      title: 'ChatViewClient',
+      path: 'src/component/chat/index.tsx',
+      desc: 'Componente final. Recibe el contexto de mensajes unificado de las 3 plataformas y lo dibuja en pantalla.'
+    },
+    tmiCtx: {
+      title: 'TmiContext',
+      path: 'src/contexts/tmiContext.tsx',
+      desc: 'Se instancia en Twitch. Durante la carga escupe un div que se monta en el UI principal rompiendo la transparencia de OBS.'
+    },
+    tmiJs: {
+      title: 'tmi.js',
+      path: 'Dependencia externa',
+      desc: 'Conexión WebSocket anónima que emite eventos que `tmiContext` captura y envía al `MessagesContext`.'
+    },
+    kickCtx: {
+      title: 'KickContext',
+      path: 'src/contexts/kickContext.tsx',
+      desc: 'Escucha únicamente el evento ChatMessage y ChatMessageDelete. Descarta encuestas, hosts y subs que ya parsea su utilería inferior.'
+    },
+    kickWs: {
+      title: 'KickChat WebSocket',
+      path: 'src/lib/kickChat/webSocket.ts',
+      desc: 'Implementación custom de un cliente de Pusher. Se conecta al canal de Kick para escuchar eventos JSON puros.'
+    },
+    ytCtx: {
+      title: 'YoutubeContext',
+      path: 'src/contexts/youtubeContext.tsx',
+      desc: 'Monta un intervalo cíclico con `setInterval` que va consumiendo las APIs del servidor de Next.js.'
+    },
+    ytApi: {
+      title: 'API Routes',
+      path: 'src/app/api/youtube/[id]/chat/route.ts',
+      desc: 'Ruta local que hace de proxy. `youtubeContext` le hace polling en intervalos en vez de usar WebSockets reales.'
+    }
+  };
+
+  function showNode(id) {
+    document.querySelectorAll('.diagram-svg .node').forEach(n => n.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+    
+    const data = nodesData[id];
+    const panel = document.getElementById('sidePanel');
+    panel.classList.remove('empty');
+    panel.innerHTML = `
+      <div class="side-panel-header">${data.path}</div>
+      <div class="side-panel-title">${data.title}</div>
+      <div class="side-panel-content">${data.desc}</div>
+    `;
+  }
+</script>
+
+</body>
+</html>

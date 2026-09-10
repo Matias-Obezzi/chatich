@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useStreamEvent } from '@/contexts/streamContext';
+import { normalizeTheme, themeSurface } from '../ui';
 
 export type GoalsOverlayProps = {
   config?: {
@@ -23,7 +24,7 @@ export default function GoalsOverlay({ config }: GoalsOverlayProps) {
   const title = config?.title || searchParams.get('title') || 'Goal';
   const target = config?.target ?? parseInt(searchParams.get('target') || '100', 10);
   const initialValue = config?.current ?? parseInt(searchParams.get('current') || '0', 10);
-  const theme = config?.theme || searchParams.get('theme') || 'default';
+  const theme = normalizeTheme(config?.theme || searchParams.get('theme'));
   const color = config?.color || searchParams.get('color') || '#8B5CF6';
 
   const [current, setCurrent] = useState(initialValue);
@@ -55,14 +56,13 @@ export default function GoalsOverlay({ config }: GoalsOverlayProps) {
 
   const percentage = Math.min((current / target) * 100, 100);
 
-  // Themes handling
-  const bgStyles = theme === 'glass' ? 'bg-black/30 backdrop-blur-md border border-white/10 shadow-xl' : 'bg-slate-900/80 border border-slate-700 shadow-lg';
+  const surface = themeSurface(theme);
   const barColor = color;
   
   return (
     <div className="w-full h-full bg-transparent flex items-center justify-center p-8 overflow-hidden pointer-events-none">
       <motion.div 
-        className={`w-full max-w-xl rounded-2xl p-4 flex flex-col gap-3 relative overflow-hidden ${bgStyles}`}
+        className={`w-full max-w-xl rounded-2xl p-4 flex flex-col gap-3 relative overflow-hidden ${surface.className}`}
         initial={{ opacity: 0, y: 50 }}
         animate={{ 
           opacity: 1, 

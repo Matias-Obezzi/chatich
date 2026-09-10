@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>De Web a Desktop: Arquitectura Tauri - Chatich</title>
+<style>
+:root {
+  --bg: #08080f;
+  --surface: #12121c;
+  --surface-2: #1a1a28;
+  --border: rgba(255, 255, 255, 0.08);
+  --text: #ECECF1;
+  --muted: #9A9AB0;
+  --accent: #7C5CFF;
+  --twitch: #9146FF;
+  --kick: #53FC18;
+  --youtube: #FF0033;
+  --spotify: #1DB954;
+  --apple: #FC3C44;
+  --radius: 14px;
+  --font: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, 'Cascadia Code', 'Fira Code', monospace;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+* { box-sizing: border-box; }
+
+h1, h2, h3, h4 { color: #fff; font-weight: 600; margin-top: 0; }
+h1 { font-size: 2.2rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; }
+h2 { font-size: 1.5rem; margin: 3rem 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem; }
+h2::before { content: '#'; color: var(--accent); }
+h3 { font-size: 1.1rem; margin-bottom: 1rem; }
+
+a { color: var(--accent); text-decoration: none; }
+
+.layout {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 3rem;
+  align-items: start;
+}
+
+/* Nav sidebar */
+nav.sidebar { position: sticky; top: 2rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem 1rem; }
+nav.sidebar ul { list-style: none; padding: 0; margin: 0; }
+nav.sidebar li { margin-bottom: 0.25rem; }
+nav.sidebar a {
+  color: var(--muted);
+  display: block;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+nav.sidebar a:hover, nav.sidebar a.active { background: var(--surface-2); color: #fff; }
+
+.main-content { min-width: 0; }
+section { margin-bottom: 4rem; scroll-margin-top: 3rem; }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; }
+
+/* Code Blocks */
+.pre-code {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  background: var(--surface-2);
+  padding: 1.25rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  margin: 1rem 0;
+  color: #abb2bf;
+}
+.kw { color: #c678dd; } .type { color: #e5c07b; } .str { color: #98c379; } .comment { color: #5c6370; } .func { color: #61afef; } .prop { color: #e06c75; } .num { color: #d19a66; }
+
+/* Diagram */
+.diagram-wrapper { display: flex; gap: 1.5rem; align-items: stretch; margin-bottom: 2rem; flex-wrap: wrap; }
+.diagram-svg { flex: 1; min-width: 500px; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); }
+.diagram-svg .node { cursor: pointer; }
+.diagram-svg .node rect { fill: var(--surface-2); stroke: var(--border); stroke-width: 2; transition: all 0.2s; rx: 8; ry: 8; }
+.diagram-svg .node:hover rect, .diagram-svg .node.active rect { stroke: var(--accent); fill: #202030; }
+.diagram-svg text { fill: var(--text); font-family: var(--font); font-size: 13px; font-weight: 500; pointer-events: none; }
+.diagram-svg .subtext { fill: var(--muted); font-size: 11px; }
+.diagram-svg .link { fill: none; stroke: var(--muted); stroke-width: 2; marker-end: url(#arrow); opacity: 0.6; }
+.diagram-svg .link:hover { stroke: var(--accent); opacity: 1; }
+
+.side-panel {
+  width: 320px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+.side-panel-header { font-family: var(--mono); color: var(--accent); font-size: 0.85rem; margin-bottom: 1rem; word-break: break-all; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+.side-panel-content { font-size: 0.9rem; color: var(--muted); }
+.side-panel-title { color: #fff; font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem; }
+
+/* Tables */
+table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem; }
+th, td { text-align: left; padding: 1rem; border-bottom: 1px solid var(--border); }
+th { color: #fff; font-weight: 600; background: var(--surface-2); }
+tr:last-child td { border-bottom: none; }
+.check { color: var(--kick); font-weight: bold; }
+.cross { color: var(--youtube); font-weight: bold; }
+.warn { color: #ffc233; font-weight: bold; }
+
+/* Badges */
+.badge { display: inline-flex; align-items: center; padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.badge.alta { background: rgba(255, 0, 51, 0.15); color: #ff4d6d; border: 1px solid rgba(255, 0, 51, 0.3); }
+.badge.media { background: rgba(255, 170, 0, 0.15); color: #ffc233; border: 1px solid rgba(255, 170, 0, 0.3); }
+.badge.baja { background: rgba(124, 92, 255, 0.15); color: #b399ff; border: 1px solid rgba(124, 92, 255, 0.3); }
+
+/* Frictions */
+.friction-item { margin-bottom: 1.5rem; background: var(--surface); padding: 1.5rem; border-radius: var(--radius); border: 1px solid var(--border); }
+.friction-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; gap: 1rem; }
+.friction-header h3 { margin: 0; font-size: 1.1rem; flex: 1; }
+.friction-desc { color: var(--muted); font-size: 0.95rem; margin: 0 0 1rem 0; }
+.friction-correction { background: rgba(124, 92, 255, 0.05); border-left: 3px solid var(--accent); padding: 1rem; border-radius: 4px; font-size: 0.9rem; margin-top: 1rem; }
+.friction-correction p { margin: 0; color: var(--text); }
+
+/* Decision Cards */
+.decision-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; }
+.decision-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; display: flex; flex-direction: column; }
+.decision-card h3 { margin: 0 0 1rem 0; font-size: 1.1rem; }
+.decision-options { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.75rem; flex: 1; }
+.decision-option { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; font-size: 0.9rem; }
+.decision-option strong { display: block; color: var(--accent); margin-bottom: 0.25rem; font-size: 0.95rem; }
+.decision-option p { margin: 0; color: var(--muted); }
+
+/* Utilities */
+.platform-color.twitch { color: var(--twitch); }
+.platform-color.kick { color: var(--kick); }
+.platform-color.youtube { color: var(--youtube); }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <nav class="sidebar">
+    <ul>
+      <li><a href="#premisa" class="active">La premisa, corregida</a></li>
+      <li><a href="#hibrido">Modelo Híbrido de Tiers</a></li>
+      <li><a href="#arquitectura">Arquitectura Tauri</a></li>
+      <li><a href="#migracion">Ruta de Migración</a></li>
+      <li><a href="#oauth">OAuth en Desktop</a></li>
+      <li><a href="#musica">Detección de Música</a></li>
+      <li><a href="#eventos">Eventos con Permisos</a></li>
+      <li><a href="#distribucion">Distribución y Operación</a></li>
+      <li><a href="#conclusion">Contras y Conclusión</a></li>
+    </ul>
+  </nav>
+
+  <main class="main-content">
+    <h1>De Web a Desktop: Arquitectura Tauri</h1>
+    
+    <section id="premisa">
+      <h2>La premisa, corregida</h2>
+      <p>Arranquemos por ser honestos: <strong>una app Tauri ES un agente local</strong>. Es un proceso de sistema operativo corriendo en la máquina del streamer.</p>
+      <p>El argumento para justificar este salto no es "evitar el agente local" (que es exactamente lo que estamos construyendo), sino <strong>consolidar</strong>. En lugar de tener la configuración fragmentada entre la URL, una extensión de navegador inestable, un plugin de OBS oscuro o un companion app de terceros, ofrecemos <strong>una sola instalación first-party</strong>.</p>
+      <p>Tauri nos permite centralizar el control: autorización OAuth, lectura de música a nivel SO, y manejo de eventos. Todo empaquetado en una única pieza de software de la que somos dueños y responsables.</p>
+    </section>
+
+    <section id="hibrido">
+      <h2>Modelo Híbrido de Tiers (Recomendación Central)</h2>
+      <p>Mudar el proyecto a Tauri no significa matar la versión web en Vercel. Al contrario, la arquitectura correcta es un modelo de dos tiers donde compartimos casi todo el código de los overlays.</p>
+      
+      <div class="card" style="padding: 0; overflow: hidden;">
+        <table>
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>Tier Web (Vercel)</th>
+              <th>Tier Desktop (Tauri)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Onboarding</td>
+              <td>Fricción cero (pegá la URL)</td>
+              <td>Requiere instalación</td>
+            </tr>
+            <tr>
+              <td>Chat anónimo (Twitch, Kick, YT)</td>
+              <td class="check">Sí</td>
+              <td class="check">Sí</td>
+            </tr>
+            <tr>
+              <td>Overlays básicos por URL</td>
+              <td class="check">Sí</td>
+              <td class="check">Sí (localhost)</td>
+            </tr>
+            <tr>
+              <td>Música del Sistema (VLC, web)</td>
+              <td class="cross">No</td>
+              <td class="check">Sí (GSMTC/MPRIS)</td>
+            </tr>
+            <tr>
+              <td>Alertas avanzadas (Sub, Bits)</td>
+              <td class="cross">No (Twitch requiere OAuth)</td>
+              <td class="check">Sí (EventSub WS)</td>
+            </tr>
+            <tr>
+              <td>Recompensas de Canal</td>
+              <td class="cross">No</td>
+              <td class="check">Sí</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p><strong>Esto no es una reescritura.</strong> Los componentes visuales de overlay en <code>src/component/*</code> se reúsan tal cual. Lo único que cambia es el transporte de eventos. El modelo <code>StreamEvent</code> y el <code>EventBus</code> (planteados en <code>arquitectura.html</code>) son la abstracción clave: al componente React de alertas no le importa si el evento de "Sub" viene de un hook tmi.js client-side, o si lo empuja un WebSocket local servido por Rust.</p>
+    </section>
+
+    <section id="arquitectura">
+      <h2>Arquitectura Tauri propuesta</h2>
+      <p style="color: var(--muted)">Flujo de la aplicación de escritorio. Hacé clic en los nodos para inspeccionar su responsabilidad.</p>
+      
+      <div class="diagram-wrapper">
+        <svg class="diagram-svg" viewBox="0 0 700 450">
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--muted)" />
+            </marker>
+          </defs>
+
+          <!-- Links -->
+          <path class="link" d="M 120 80 L 250 80" />
+          <path class="link" d="M 370 80 L 500 80" />
+          
+          <path class="link" d="M 310 100 L 310 200" />
+          <path class="link" d="M 310 240 L 310 320" />
+          
+          <path class="link" d="M 560 100 L 560 320" />
+          <path class="link" d="M 380 340 L 500 340" />
+
+          <!-- Nodes -->
+          <g class="node" onclick="showNode('webview')">
+            <rect x="50" y="60" width="140" height="40" />
+            <text x="120" y="85" text-anchor="middle">Settings Webview</text>
+          </g>
+
+          <g class="node active" onclick="showNode('rust')">
+            <rect x="250" y="60" width="120" height="40" />
+            <text x="310" y="85" text-anchor="middle" class="platform-color kick">Core Rust</text>
+          </g>
+
+          <g class="node" onclick="showNode('oauth')">
+            <rect x="500" y="60" width="120" height="40" />
+            <text x="560" y="85" text-anchor="middle">Plataformas</text>
+          </g>
+
+          <g class="node" onclick="showNode('axum')">
+            <rect x="240" y="200" width="140" height="40" />
+            <text x="310" y="225" text-anchor="middle">axum (HTTP Local)</text>
+          </g>
+
+          <g class="node" onclick="showNode('obs')">
+            <rect x="240" y="320" width="140" height="40" />
+            <text x="310" y="345" text-anchor="middle">OBS Browser Source</text>
+          </g>
+
+          <g class="node" onclick="showNode('ws')">
+            <rect x="500" y="320" width="120" height="40" />
+            <text x="560" y="345" text-anchor="middle">WebSocket Local</text>
+          </g>
+
+        </svg>
+
+        <div class="side-panel" id="sidePanel">
+          <div class="side-panel-header">Proceso nativo</div>
+          <div class="side-panel-title">Core Rust</div>
+          <div class="side-panel-content">El cerebro de la operación. Maneja el estado, guarda secretos en el keychain, lee APIs de SO (música), hace polling a YT, sostiene la conexión a EventSub/Pusher y expone servidores locales.</div>
+        </div>
+      </div>
+      
+      <p><strong>¿Por qué los overlays siguen siendo web?</strong> Porque OBS Browser Source necesita una URL para renderizar. Intentar renderizar nativamente e inyectar el frame en OBS es una pesadilla de APIs y compatibilidad. Servir los overlays exportados desde Rust mediante un mini-servidor local (axum) en <code>127.0.0.1:PUERTO</code> es confiable, ultra-rápido y permite reutilizar todo el código React.</p>
+    </section>
+
+    <section id="migracion">
+      <h2>Ruta de Migración (Fricciones Reales)</h2>
+      <p>Tauri usa el frontend como archivos estáticos. Eso significa compilar Next.js con <code>output: 'export'</code>. Al analizar el código actual, esto <strong>rompe</strong> cuatro cosas específicas:</p>
+
+      <div class="friction-item">
+        <div class="friction-header">
+          <h3>1. Middleware de cabeceras</h3>
+          <span class="badge alta">src/middleware.ts : 16</span>
+        </div>
+        <p class="friction-desc"><code>middleware.ts</code> no existe en export estático. Actualmente inyecta cabeceras como <code>x-url</code>, <code>x-pathname</code> y <code>x-lang</code>.</p>
+        <div class="pre-code">
+<span class="comment">// src/middleware.ts</span>
+response.headers.<span class="func">set</span>(<span class="str">"x-url"</span>, request.url);
+response.headers.<span class="func">set</span>(<span class="str">"x-lang"</span>, lang);</div>
+        <div class="friction-correction">
+          <p><strong>Solución:</strong> El frontend estático de Tauri debe usar cliente-side routing o hooks estándar. <code>src/lib/context.ts</code> dejará de depender de <code>next/headers</code>. La URL actual se lee con <code>window.location</code> o <code>usePathname()</code>, y el idioma se maneja por local-storage o config que inyecta Rust.</p>
+        </div>
+      </div>
+
+      <div class="friction-item">
+        <div class="friction-header">
+          <h3>2. API Routes dinámicas</h3>
+          <span class="badge alta">src/app/api/youtube/[id]/chat/route.ts</span>
+        </div>
+        <p class="friction-desc">Los route handlers que corren en el servidor de Vercel desaparecen. Actualmente, el proxy a YouTube para evitar CORS está ahí.</p>
+        <div class="pre-code">
+<span class="comment">// route.ts</span>
+<span class="kw">export const</span> GET = <span class="kw">async</span> (request: <span class="type">Request</span>, { params }) => {
+  <span class="kw">const</span> url = <span class="str">`https://www.youtube.com/live_chat?v=${id}`</span>;
+  <span class="kw">const</span> content = <span class="kw">await</span> <span class="func">getYtInitialDataContent</span>(url, request.headers);</div>
+        <div class="friction-correction">
+          <p><strong>Solución:</strong> Mudar la lógica de scraping y polling al backend de Rust usando <code>reqwest</code>. Rust no tiene restricciones de CORS. En vez de que React haga polling, Rust hace el polling y emite los mensajes parseados por el WebSocket local hacia el frontend.</p>
+        </div>
+      </div>
+
+      <div class="friction-item">
+        <div class="friction-header">
+          <h3>3. Async Server Components</h3>
+          <span class="badge media">src/app/chat/page.tsx : 9</span>
+        </div>
+        <p class="friction-desc">La página principal del chat es un Server Component asíncrono que lee el contexto (los headers dinámicos) antes de renderizar.</p>
+        <div class="pre-code">
+<span class="comment">// src/app/chat/page.tsx</span>
+<span class="kw">export default async function</span> <span class="func">Chat</span>() {
+  <span class="kw">const</span> context = <span class="kw">await</span> <span class="func">getContext</span>();
+  <span class="kw">const</span> params = <span class="kw">new</span> <span class="type">URLSearchParams</span>(context.search);</div>
+        <div class="friction-correction">
+          <p><strong>Solución:</strong> Convertir <code>Chat</code> a Client Component (<code>"use client"</code>) y leer los parámetros de inicialización usando <code>useSearchParams</code> (envuelto en Suspense) o inyectándolos directamente al inicializar el Webview en Tauri.</p>
+        </div>
+      </div>
+
+      <div class="friction-item">
+        <div class="friction-header">
+          <h3>4. Loaders de Webpack incompatibles</h3>
+          <span class="badge baja">next.config.ts : 8</span>
+        </div>
+        <p class="friction-desc">Se usa <code>raw-loader</code> para importar archivos Markdown de internacionalización directamente como strings en build-time.</p>
+        <div class="pre-code">
+<span class="comment">// next.config.ts</span>
+config.module.rules.<span class="func">push</span>({ <span class="prop">test</span>: <span class="str">/\.md$/</span>, <span class="prop">use</span>: <span class="str">'raw-loader'</span> });</div>
+        <div class="friction-correction">
+          <p><strong>Solución:</strong> Next.js soporta static export con loaders custom si son interpretables en build. Opcionalmente, se pueden migrar a JSON o cargar en runtime llamando a un Tauri Command (<code>invoke('get_i18n', { lang })</code>).</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="oauth">
+      <h2>OAuth en Desktop: Por qué es MEJOR</h2>
+      <p>Embeber <i>Client Secrets</i> en una app distribuida (binario, .exe, .dmg) es un error crítico de seguridad: cualquiera puede extraerlo. El RFC 8252 define cómo hacerlo bien: <strong>PKCE con cliente público</strong>.</p>
+      
+      <div class="card">
+        <h3>Flujo de Autorización Nativo</h3>
+        <ol style="margin: 0; padding-left: 20px; color: var(--muted)">
+          <li>Rust genera un Code Verifier y Code Challenge aleatorio (PKCE).</li>
+          <li>Rust abre el navegador del sistema operativo usando <code>open</code> o <code>tauri-plugin-shell</code>.</li>
+          <li>El usuario se loguea en Twitch/Spotify en su browser habitual (aprovechando sesiones activas).</li>
+          <li>Redirección. Dos opciones:
+            <ul>
+              <li><strong>Deep link custom</strong>: <code>chatich://oauth/callback</code> (vía <code>tauri-plugin-deep-link</code>). Falla si el SO no registra bien el esquema.</li>
+              <li><strong>Loopback HTTP (Recomendado)</strong>: Rust levanta un miniserver temporal en <code>http://127.0.0.1:PUERTO/callback</code>. Confiable y no requiere permisos de admin.</li>
+            </ul>
+          </li>
+          <li>Rust recibe el <code>code</code>, y lo cambia por tokens usando el Code Verifier.</li>
+          <li>Los tokens se guardan de forma segura en el llavero del SO usando <code>tauri-plugin-stronghold</code> o el crate <code>keyring</code> (Windows Credential Manager / macOS Keychain). ¡Nada de texto plano!</li>
+        </ol>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Plataforma</th>
+            <th>Scopes clave</th>
+            <th>Qué desbloquea</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="platform-color twitch">Twitch</span></td>
+            <td><code>channel:read:redemptions</code>, <code>bits:read</code>, <code>channel:read:subscriptions</code></td>
+            <td>Canjes de puntos de canal, alertas reales de bits, hype trains, subs. Todo por EventSub WebSocket.</td>
+          </tr>
+          <tr>
+            <td><span class="platform-color spotify">Spotify</span></td>
+            <td><code>user-read-currently-playing</code></td>
+            <td>API para obtener track actual, carátula en HD e IDs de canciones, como fallback si las APIs del SO fallan.</td>
+          </tr>
+          <tr>
+            <td><span class="platform-color youtube">YouTube</span></td>
+            <td><code>yt-analytics.readonly</code> (opcional)</td>
+            <td>Acceso autenticado al LiveChat (más cuota y lectura de mensajes de miembros).</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="musica">
+      <h2>Detección de Música (OS Level)</h2>
+      <p>La ventaja asesina de la app nativa: no depender de las APIs web de Spotify y resolver el agujero ciego que era YouTube Music en navegador. Rust puede preguntar al Sistema Operativo qué está sonando, sin OAuth.</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Sistema Operativo</th>
+            <th>Tecnología / API</th>
+            <th>Estado y Alcance</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Windows</td>
+            <td><strong>GSMTC</strong> (GlobalSystemMediaTransportControls)</td>
+            <td class="check">Excelente. Lee Spotify nativo, VLC, YouTube/YT Music en Chrome/Edge. Da título, artista y posición temporal. Accesible vía el crate <code>windows</code>.</td>
+          </tr>
+          <tr>
+            <td>Linux</td>
+            <td><strong>MPRIS</strong> (sobre D-Bus)</td>
+            <td class="check">Perfecto. Equivalente a Windows, soporte estándar en casi todos los reproductores.</td>
+          </tr>
+          <tr>
+            <td>macOS</td>
+            <td><strong>MediaRemote</strong> (API privada)</td>
+            <td class="warn">Restringido. Apple limitó el acceso a NowPlaying a menos que pidas entitlements especiales. Probablemente se necesite depender de OAuth de Spotify o Apple Music web APIs como fallback.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="eventos">
+      <h2>Eventos con Permisos de Broadcaster</h2>
+      <p>Con OAuth resuelto y un proceso demonio corriendo en Rust, el acceso a datos cambia drásticamente respecto al modelo 100% web.</p>
+      
+      <div class="card" style="padding: 0; overflow: hidden;">
+        <table>
+          <thead>
+            <tr>
+              <th>Plataforma</th>
+              <th>En la Web (Actual)</th>
+              <th>En Tauri (Propuesto)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Twitch</td>
+              <td>Solo IRC chat. Sin acceso a canjes, alertas de subs imprecisas.</td>
+              <td><strong>EventSub sobre WebSocket.</strong> Conexión oficial que escupe JSON con eventos perfectos de subs, raids, follows y canjes de puntos.</td>
+            </tr>
+            <tr>
+              <td>Kick</td>
+              <td>Conexión WS no oficial a Pusher.</td>
+              <td>Idéntico, pero el proceso Rust mantiene la conexión WS, aislando las caídas o cierres de ventana de OBS.</td>
+            </tr>
+            <tr>
+              <td>YouTube</td>
+              <td>Proxy route en Vercel sujeto a rate limits.</td>
+              <td><strong>Polling directo desde Rust.</strong> Sin CORS, scraping directo de <code>ytInitialData</code> local o consumo agresivo de la API de Data V3 si hay OAuth.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="distribucion">
+      <h2>Distribución y Operación</h2>
+      <p>Distribuir binarios no es subir código a Vercel. Tiene fricciones reales de distribución que hay que afrontar:</p>
+      <ul style="color: var(--muted)">
+        <li><strong>Firma de Código (Code Signing):</strong> Obligatorio. En Windows, un ejecutable sin firmar levanta la alerta roja de SmartScreen ("Windows protegió su PC"), matando la conversión. Se necesita un certificado OV (USD ~200-400/año). En macOS, se requiere Notarización con cuenta de Apple Developer (USD 99/año).</li>
+        <li><strong>Instalador:</strong> Tauri genera instaladores (MSI, NSIS, DMG, AppImage) por nosotros.</li>
+        <li><strong>Actualizaciones:</strong> El plugin <code>tauri-plugin-updater</code> permite auto-updates. Rust descarga el delta y aplica el parche al reiniciar, manteniendo a los usuarios en la misma versión.</li>
+        <li><strong>Comportamiento del SO:</strong> Al minimizar, va a la bandeja del sistema (System Tray). Iniciar con Windows (Autostart) requiere registro en el SO, fácil con Tauri.</li>
+      </ul>
+    </section>
+
+    <section id="conclusion">
+      <h2>Contras y Conclusión</h2>
+      
+      <div class="card">
+        <h3 style="color: #ff4d6d">Contras Honestos</h3>
+        <ul style="color: var(--muted); margin: 0; padding-left: 20px;">
+          <li><strong>Curva de Rust:</strong> El equipo tiene que meterse en un lenguaje de sistemas.</li>
+          <li><strong>Mantenimiento Multi-OS:</strong> Las APIs de música (GSMTC vs MPRIS vs MediaRemote) obligan a escribir código específico por sistema operativo.</li>
+          <li><strong>Fricción inicial:</strong> Se pierde el onboarding mágico de "pasame tu canal y te doy una URL". El usuario tiene que descargar e instalar.</li>
+          <li><strong>Peso:</strong> Aunque Tauri es diminuto frente a Electron (~10MB vs ~120MB), sigue siendo un binario descargable.</li>
+        </ul>
+      </div>
+
+      <h3>Recomendación</h3>
+      <p><strong>Avanzar con el Modelo Híbrido, enfocando Tauri solo en Windows al inicio.</strong></p>
+      <p>El 90% de los streamers usan Windows. Resolver la música con GSMTC y las alertas con EventSub en Windows valida el producto completo. Vercel queda encendido como herramienta de marketing y onboarding para usuarios casuales de solo-chat, compartiendo el 100% de los componentes React. Cuando el usuario quiere música que no sea Last.fm, o alertas con puntos de canal, el tier web le muestra el botón de descarga del tier Desktop.</p>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  // Nav highlight
+  const sections = document.querySelectorAll('section');
+  const navLinks = document.querySelectorAll('.sidebar a');
+  
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(section => {
+      const sectionTop = section.offsetTop;
+      if (scrollY >= sectionTop - 100) {
+        current = section.getAttribute('id');
+      }
+    });
+    navLinks.forEach(a => {
+      a.classList.remove('active');
+      if (a.getAttribute('href').includes(current)) {
+        a.classList.add('active');
+      }
+    });
+  });
+
+  // Diagram Node Info Data
+  const nodesData = {
+    webview: {
+      title: 'Settings Webview',
+      desc: 'Frontend Next.js (exportado). Se comunica con Rust mediante Tauri Commands (IPC). Muestra la UI de login, configuración de colores y temas.'
+    },
+    rust: {
+      title: 'Core Rust',
+      desc: 'Maneja el estado, guarda secretos en el keychain, lee APIs de SO (música), hace polling a YT, sostiene la conexión a EventSub/Pusher y expone servidores locales.'
+    },
+    oauth: {
+      title: 'Plataformas (Twitch, YT, Kick)',
+      desc: 'Conexiones a las APIs oficiales. Twitch y Kick por WebSocket, YouTube mediante peticiones HTTP desde Rust sin restricciones CORS.'
+    },
+    axum: {
+      title: 'axum (HTTP Local)',
+      desc: 'Servidor web miniatura embebido en Rust. Sirve los componentes React estáticos en 127.0.0.1 para que OBS pueda cargarlos.'
+    },
+    obs: {
+      title: 'OBS Browser Source',
+      desc: 'Se conecta a localhost. Al usar el servidor local, evita bloqueos de seguridad del navegador y renderiza el overlay transparente.'
+    },
+    ws: {
+      title: 'WebSocket Local',
+      desc: 'Canal de comunicación en tiempo real entre el Core Rust y los overlays cargados en OBS. Empuja eventos normalizados (StreamEvent).'
+    }
+  };
+
+  function showNode(id) {
+    document.querySelectorAll('.diagram-svg .node').forEach(n => n.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+    
+    const data = nodesData[id];
+    const panel = document.getElementById('sidePanel');
+    panel.innerHTML = `
+      <div class="side-panel-header">Responsabilidad del nodo</div>
+      <div class="side-panel-title">\${data.title}</div>
+      <div class="side-panel-content">\${data.desc}</div>
+    `;
+  }
+</script>
+
+</body>
+</html>

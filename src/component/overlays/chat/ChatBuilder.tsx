@@ -10,10 +10,12 @@ import {
     ChannelInputs,
     ColorField,
     OptionCards,
+    OVERLAY_THEME_OPTIONS,
     Section,
     SliderField,
     useOrigin,
 } from '../ui';
+import type { OverlayTheme } from '../ui';
 
 const PREVIEW_MESSAGES: ChatMessageEvent[] = [
     {
@@ -70,6 +72,7 @@ export default function ChatBuilder() {
     const origin = useOrigin();
 
     const [layout, setLayout] = useState<'horizontal' | 'vertical'>('vertical');
+    const [theme, setTheme] = useState<OverlayTheme>('glass');
     const [ttl, setTtl] = useState('');
     const [background, setBackground] = useState('rgba(18, 18, 29, 0.85)');
     const [textColor, setTextColor] = useState('#EDEDF5');
@@ -91,10 +94,11 @@ export default function ChatBuilder() {
         let target = new URL(`${origin}/overlay/chat`);
         target = appendChannelParams(target);
         target.searchParams.set('layout', layout);
+        target.searchParams.set('theme', theme);
         if (ttl) target.searchParams.set('ttl', ttl);
         target.searchParams.set('styles', JSON.stringify(styles));
         return target.toString();
-    }, [origin, appendChannelParams, layout, ttl, styles]);
+    }, [origin, appendChannelParams, layout, theme, ttl, styles]);
 
     return (
         <BuilderShell
@@ -106,7 +110,7 @@ export default function ChatBuilder() {
                     }`}
                 >
                     {PREVIEW_MESSAGES.map((message) => (
-                        <Message key={message.id} message={message} styles={styles} layout={layout} />
+                        <Message key={message.id} message={message} styles={styles} layout={layout} theme={theme} />
                     ))}
                 </div>
             }
@@ -133,6 +137,7 @@ export default function ChatBuilder() {
             </Section>
 
             <Section title="Estilo">
+                <OptionCards label="Tema" value={theme} onChange={(value) => setTheme(value as OverlayTheme)} options={OVERLAY_THEME_OPTIONS} />
                 <ColorField label="Fondo del mensaje" value={background} onChange={setBackground} allowAlpha />
                 <ColorField label="Color del texto" value={textColor} onChange={setTextColor} />
                 <SliderField

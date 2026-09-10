@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Overlays de Eventos - Diseño y Producto</title>
+<style>
+:root{--bg:#08080f;--surface:#12121c;--surface-2:#1a1a28;--border:rgba(255,255,255,.08);--text:#ECECF1;--muted:#9A9AB0;--accent:#7C5CFF;--twitch:#9146FF;--kick:#53FC18;--youtube:#FF0033;--radius:14px;--font:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;--mono:ui-monospace,'Cascadia Code','Fira Code',monospace}
+body { background: var(--bg); color: var(--text); font-family: var(--font); margin: 0; padding: 0; line-height: 1.6; }
+h1, h2, h3 { font-weight: 600; margin-top: 2rem; color: #fff; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.container { max-width: 1000px; margin: 0 auto; padding: 2rem; }
+nav { position: sticky; top: 0; background: rgba(8, 8, 15, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 1rem 0; z-index: 100; }
+nav ul { list-style: none; padding: 0; margin: 0; display: flex; gap: 1.5rem; justify-content: center; }
+nav a { color: var(--muted); font-size: 0.9rem; font-weight: 500; transition: color 0.2s; }
+nav a:hover { color: var(--text); text-decoration: none; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+code { font-family: var(--mono); background: var(--surface-2); padding: 0.2rem 0.4rem; border-radius: 4px; font-size: 0.85em; color: #a5d6ff; }
+.pre-code { font-family: var(--mono); font-size: 0.85rem; background: var(--surface-2); padding: 1.25rem; border-radius: 8px; overflow-x: auto; border: 1px solid var(--border); margin: 1rem 0; color: #abb2bf; }
+.kw { color: #c678dd; } .type { color: #e5c07b; } .str { color: #98c379; } .comment { color: #5c6370; } .func { color: #61afef; } .prop { color: #e06c75; }
+table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+th, td { text-align: left; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); }
+th { background: var(--surface-2); color: var(--muted); font-weight: 500; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.badge { display: inline-block; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+.badge.req-oauth { background: rgba(255, 165, 0, 0.1); color: orange; border: 1px solid rgba(255,165,0,0.2); }
+.badge.req-anon { background: rgba(83, 252, 24, 0.1); color: var(--kick); border: 1px solid rgba(83,252,24,0.2); }
+.controls { display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center; flex-wrap: wrap; }
+.controls select, .controls input, .controls button { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem; font-family: inherit; font-size: 0.9rem; cursor: pointer; }
+.controls button:hover { background: var(--border); }
+.widget-container { position: relative; padding: 2rem; background: #000; border-radius: var(--radius); overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 250px; border: 1px dashed var(--border); }
+
+/* Alertas */
+.alert-box { position: absolute; top: 20px; left: 50%; transform: translateX(-50%) translateY(-150%); background: var(--surface); border: 2px solid var(--accent); padding: 16px 24px; border-radius: 16px; display: flex; align-items: center; gap: 16px; box-shadow: 0 10px 40px rgba(124,92,255,0.4); opacity: 0; transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s; z-index: 10; min-width: 320px; }
+.alert-box.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+.alert-avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #f0f, var(--accent)); flex-shrink: 0; }
+.alert-content p { margin: 0; }
+.alert-title { font-weight: 700; font-size: 1.1rem; }
+.alert-desc { font-size: 0.9rem; color: var(--muted); }
+
+/* Contadores */
+.goal-bar-wrap { width: 100%; max-width: 400px; background: rgba(255,255,255,0.1); border-radius: 8px; height: 32px; position: relative; overflow: hidden; }
+.goal-bar-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.5s ease; position: relative; display: flex; align-items: center; padding-left: 10px; font-weight: bold; font-size: 0.9rem; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+.goal-text { position: absolute; right: 10px; top: 5px; font-weight: bold; font-size: 0.9rem; z-index: 2; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+.goal-bar-wrap.completed .goal-bar-fill { background: var(--kick); animation: pulse 1s infinite; }
+
+/* Interaccion - Emotes */
+.emote-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; }
+.emote { position: absolute; width: 32px; height: 32px; background: linear-gradient(45deg, #ff0, #f0f); border-radius: 8px; opacity: 0; top: -40px; }
+@keyframes fall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(350px) rotate(360deg); opacity: 0; } }
+
+/* Interaccion - Poll */
+.poll-widget { background: var(--surface); padding: 16px; border-radius: 12px; border: 1px solid var(--border); width: 100%; max-width: 300px; z-index: 2;}
+.poll-title { font-weight: bold; margin-bottom: 12px; font-size: 1rem; }
+.poll-opt { margin-bottom: 8px; position: relative; }
+.poll-opt-bg { height: 28px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; }
+.poll-opt-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.5s ease; }
+.poll-opt-label { position: absolute; top: 3px; left: 8px; font-size: 0.85rem; font-weight: bold; text-shadow: 0 1px 2px #000; }
+.poll-opt-pct { position: absolute; top: 3px; right: 8px; font-size: 0.85rem; font-weight: bold; text-shadow: 0 1px 2px #000; }
+
+/* Estado Stream */
+.status-screen { width: 100%; height: 100%; position: absolute; top: 0; left: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; background: radial-gradient(circle, var(--surface-2) 0%, #000 100%); }
+.status-title { font-size: 2.5rem; font-weight: 800; letter-spacing: 2px; margin-bottom: 20px; animation: pulse 2s infinite; text-transform: uppercase; text-shadow: 0 0 20px rgba(124,92,255,0.5); }
+.ticker-wrap { position: absolute; bottom: 0; width: 100%; background: var(--accent); color: #fff; height: 30px; display: flex; align-items: center; overflow: hidden; font-weight: bold; font-size: 0.9rem; }
+.ticker-content { white-space: nowrap; animation: marquee 10s linear infinite; display: inline-block; padding-left: 100%; }
+@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+
+/* Moderacion */
+.chat-mod { width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 8px; }
+.chat-msg { background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; font-size: 0.9rem; transition: all 0.3s ease; transform-origin: left; display: flex; flex-direction: column; }
+.chat-msg .author { font-weight: bold; font-size: 0.8rem; margin-bottom: 2px; }
+.chat-msg.deleted { background: rgba(255,0,51,0.1); color: var(--muted); transform: scale(0.95); opacity: 0.5; border: 1px solid rgba(255,0,51,0.3); }
+.chat-msg.deleted .text { text-decoration: line-through; }
+
+/* Comparativa Table Platform Colors */
+.tw-text { color: var(--twitch); font-weight: bold; }
+.ki-text { color: var(--kick); font-weight: bold; }
+.yt-text { color: var(--youtube); font-weight: bold; }
+
+/* Filter buttons */
+.platform-filter { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+.btn-filter { background: var(--surface); color: var(--muted); border: 1px solid var(--border); padding: 0.4rem 0.8rem; border-radius: 20px; cursor: pointer; font-size: 0.85rem; }
+.btn-filter.active { background: var(--surface-2); color: var(--text); border-color: var(--accent); }
+</style>
+</head>
+<body>
+
+<nav>
+    <ul>
+        <li><a href="#alertas">1. Alertas</a></li>
+        <li><a href="#contadores">2. Contadores</a></li>
+        <li><a href="#interaccion">3. Interacción</a></li>
+        <li><a href="#estado">4. Estado</a></li>
+        <li><a href="#moderacion">5. Moderación</a></li>
+        <li><a href="#comparativa">Comparativa</a></li>
+        <li><a href="#url-builder">URL Builder</a></li>
+        <li><a href="#arquitectura">Arquitectura</a></li>
+    </ul>
+</nav>
+
+<div class="container">
+    <header>
+        <h1>Overlays de Eventos</h1>
+        <p style="color: var(--muted)">Catálogo interactivo de alertas, metas, encuestas y pantallas, alimentados por los eventos de Twitch, Kick y YouTube.</p>
+    </header>
+
+    <section id="alertas">
+        <h2>1. Alertas de evento</h2>
+        <div class="card">
+            <p>Cola real de eventos encadenados. Si llegan varios a la vez (ej. un raid y una suscripción), se encolan y reproducen uno atrás de otro.</p>
+            <div class="controls">
+                <button onclick="queueAlert('sub')">Simular Sub (Twitch)</button>
+                <button onclick="queueAlert('gift')">Simular Gift Bomb (Kick)</button>
+                <button onclick="queueAlert('superchat')">Simular Super Chat (YouTube)</button>
+            </div>
+            <div class="widget-container">
+                <div class="alert-box" id="alert-box">
+                    <div class="alert-avatar" id="alert-avatar"></div>
+                    <div class="alert-content">
+                        <p class="alert-title" id="alert-title">Usuario</p>
+                        <p class="alert-desc" id="alert-desc">Acción</p>
+                    </div>
+                </div>
+                <div style="color: var(--muted); font-size: 0.9rem;">Área de streaming transparente (OBS)</div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contadores">
+        <h2>2. Contadores y metas</h2>
+        <div class="card">
+            <p>Barra de meta que avanza en tiempo real. Soporta animación especial al completarse.</p>
+            <div class="controls">
+                <button onclick="addProgress(1)">Sumar +1 Follower</button>
+                <button onclick="addProgress(5)">Sumar +5 Followers</button>
+                <button onclick="resetProgress()">Reiniciar Meta</button>
+            </div>
+            <div class="widget-container">
+                <div class="goal-bar-wrap" id="goal-bar">
+                    <div class="goal-bar-fill" id="goal-fill">Meta de Followers</div>
+                    <div class="goal-text"><span id="goal-current">0</span> / <span id="goal-target">20</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="interaccion">
+        <h2>3. Overlays de interacción</h2>
+        <div class="card">
+            <p>Widgets que reaccionan al volumen o contenido del chat, como encuestas en vivo y lluvia de emotes.</p>
+            <div class="controls">
+                <button onclick="votePoll(0)">Votar Opción A</button>
+                <button onclick="votePoll(1)">Votar Opción B</button>
+                <button onclick="triggerEmoteRain()">Lluvia de Emotes</button>
+            </div>
+            <div class="widget-container" style="position: relative;">
+                <div class="emote-layer" id="emote-layer"></div>
+                <div class="poll-widget">
+                    <div class="poll-title">¿Qué jugamos hoy?</div>
+                    <div class="poll-opt">
+                        <div class="poll-opt-bg"><div class="poll-opt-fill" id="poll-fill-0" style="width: 50%;"></div></div>
+                        <div class="poll-opt-label">Elden Ring</div>
+                        <div class="poll-opt-pct" id="poll-pct-0">50%</div>
+                    </div>
+                    <div class="poll-opt">
+                        <div class="poll-opt-bg"><div class="poll-opt-fill" id="poll-fill-1" style="width: 50%;"></div></div>
+                        <div class="poll-opt-label">Minecraft</div>
+                        <div class="poll-opt-pct" id="poll-pct-1">50%</div>
+                    </div>
+                    <div style="text-align: center; font-size: 0.8rem; color: var(--muted); margin-top: 8px;">
+                        <span id="poll-total">10</span> votos totales
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="estado">
+        <h2>4. Overlays de estado de stream</h2>
+        <div class="card">
+            <p>Pantallas completas para pausas (BRB), inicio y fin, con un ticker de últimos eventos.</p>
+            <div class="controls">
+                <select id="status-select" onchange="changeStatus()">
+                    <option value="brb">Vuelvo Enseguida (BRB)</option>
+                    <option value="start">Empezando Pronto</option>
+                    <option value="end">Stream Terminado</option>
+                </select>
+            </div>
+            <div class="widget-container" style="height: 300px; padding: 0;">
+                <div class="status-screen">
+                    <div class="status-title" id="status-title">VUELVO ENSEGUIDA</div>
+                    <div style="color: var(--muted);">Viewers: <span style="color: #fff; font-weight: bold;">1,204</span> (Combinado)</div>
+                    <div class="ticker-wrap">
+                        <div class="ticker-content">Último Sub: <strong>Matias_Dev</strong> • Último Follow: <strong>JuanPerez</strong> • Top Donador: <strong>Gamer123 (500 Bits)</strong> • Último Sub: <strong>Matias_Dev</strong> • Último Follow: <strong>JuanPerez</strong></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="moderacion">
+        <h2>5. Moderación visible</h2>
+        <div class="card">
+            <p>Reflejo visual de la moderación. Cuando un mensaje es borrado o el usuario es baneado (timeout), el mensaje se tacha de forma animada.</p>
+            <div class="controls">
+                <button onclick="addChatMsg()">Nuevo Mensaje</button>
+                <button onclick="deleteLastMsg()">Borrar Último</button>
+            </div>
+            <div class="widget-container">
+                <div class="chat-mod" id="chat-mod-container">
+                    <div class="chat-msg">
+                        <span class="author" style="color: var(--twitch)">viewer_uno</span>
+                        <span class="text">Hola a todos!</span>
+                    </div>
+                    <div class="chat-msg">
+                        <span class="author" style="color: var(--kick)">kick_fan</span>
+                        <span class="text">Buen stream bro</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="comparativa">
+        <h2>Disponibilidad por Plataforma</h2>
+        <div class="card">
+            <div class="platform-filter">
+                <button class="btn-filter active" onclick="filterTable('all')">Todas</button>
+                <button class="btn-filter" onclick="filterTable('tw')">Twitch</button>
+                <button class="btn-filter" onclick="filterTable('ki')">Kick</button>
+                <button class="btn-filter" onclick="filterTable('yt')">YouTube</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table id="events-table">
+                    <thead>
+                        <tr>
+                            <th>Evento</th>
+                            <th>Twitch</th>
+                            <th>Kick</th>
+                            <th>YouTube</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="row-tw row-ki row-yt">
+                            <td>Mensajes de Chat</td>
+                            <td><span class="badge req-anon">Anónimo (tmi.js)</span></td>
+                            <td><span class="badge req-anon">Anónimo (Pusher WS)</span></td>
+                            <td><span class="badge req-anon">Anónimo (Polling)</span></td>
+                        </tr>
+                        <tr class="row-tw row-ki row-yt">
+                            <td>Borrado / Timeout</td>
+                            <td><span class="badge req-anon">Anónimo (tmi.js)</span></td>
+                            <td><span class="badge req-anon">Anónimo (Pusher WS)</span></td>
+                            <td><span class="badge req-oauth">Requiere OAuth (API)</span></td>
+                        </tr>
+                        <tr class="row-tw row-ki">
+                            <td>Suscripciones / Resubs</td>
+                            <td><span class="badge req-anon">Anónimo (tmi.js)</span></td>
+                            <td><span class="badge req-anon">Anónimo (Pusher WS)</span></td>
+                            <td><span class="badge req-oauth">Requiere OAuth</span></td>
+                        </tr>
+                        <tr class="row-tw row-ki">
+                            <td>Gift Subs (Regalos)</td>
+                            <td><span class="badge req-anon">Anónimo (tmi.js)</span></td>
+                            <td><span class="badge req-anon">Anónimo (Pusher WS)</span></td>
+                            <td><span class="badge req-oauth">Requiere OAuth</span></td>
+                        </tr>
+                        <tr class="row-tw">
+                            <td>Follows</td>
+                            <td><span class="badge req-oauth">EventSub (OAuth/Token)</span></td>
+                            <td><span style="color: var(--muted); font-size: 0.85rem;">No disponible (API cerrada)</span></td>
+                            <td><span style="color: var(--muted); font-size: 0.85rem;">No aplica</span></td>
+                        </tr>
+                        <tr class="row-tw row-ki">
+                            <td>Raids / Hosts</td>
+                            <td><span class="badge req-anon">Anónimo (tmi.js)</span></td>
+                            <td><span class="badge req-anon">Anónimo (Pusher WS)</span></td>
+                            <td><span style="color: var(--muted); font-size: 0.85rem;">No disponible API</span></td>
+                        </tr>
+                        <tr class="row-tw row-yt">
+                            <td>Donaciones directas</td>
+                            <td><span class="badge req-anon">Bits (tmi.js)</span></td>
+                            <td><span style="color: var(--muted); font-size: 0.85rem;">No nativo</span></td>
+                            <td><span class="badge req-anon">Super Chat (Polling)</span></td>
+                        </tr>
+                        <tr class="row-ki">
+                            <td>Encuestas</td>
+                            <td><span class="badge req-oauth">EventSub (OAuth)</span></td>
+                            <td><span class="badge req-anon">Anónimo (Pusher WS)</span></td>
+                            <td><span class="badge req-oauth">Requiere OAuth</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--muted); margin-top: 1rem;"><strong>Nota:</strong> Chatich lee Kick usando el parser en <code>src/lib/kickChat/</code> que ya tiene soporte para Subs, Gifts y Hosts, pero actualmente los ignora. Se pueden habilitar sin necesidad de OAuth.</p>
+        </div>
+    </section>
+
+    <section id="url-builder">
+        <h2>Constructor de URL</h2>
+        <div class="card">
+            <p>Propuesta de API de URLs para montar overlays individuales en OBS.</p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                <label>Overlay:
+                    <select id="b-type" onchange="buildUrl()" style="width:100%; margin-top:4px;">
+                        <option value="alerts">Alertas</option>
+                        <option value="goal">Meta / Contadores</option>
+                        <option value="poll">Encuesta</option>
+                        <option value="screen">Pantalla Estado</option>
+                    </select>
+                </label>
+                <label>Canal Twitch:
+                    <input type="text" id="b-tw" value="ibai" onkeyup="buildUrl()" style="width:100%; margin-top:4px;">
+                </label>
+                <label>Canal Kick:
+                    <input type="text" id="b-ki" value="westcol" onkeyup="buildUrl()" style="width:100%; margin-top:4px;">
+                </label>
+                <label>Tema / Acento:
+                    <select id="b-theme" onchange="buildUrl()" style="width:100%; margin-top:4px;">
+                        <option value="neon">Neón Oscuro</option>
+                        <option value="light">Claro Limpio</option>
+                    </select>
+                </label>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="b-result" readonly style="flex-grow:1; font-family:var(--mono);" value="https://chatich.vercel.app/overlay/alerts?twitch=ibai&kick=westcol&theme=neon">
+                <button onclick="copyUrl()" style="padding:10px 16px; background:var(--accent); color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:600;">Copiar</button>
+            </div>
+        </div>
+    </section>
+
+    <section id="arquitectura">
+        <h2>Arquitectura Objetivo</h2>
+        <div class="card">
+            <p>Para soportar todos estos widgets sin acoplarlos al <code>MessagesContext</code> actual (que solo entiende de mensajes), se debe normalizar el modelo usando un <code>StreamEvent</code> y un <code>EventBus</code>.</p>
+            
+            <div class="pre-code">
+<span class="kw">export type</span> <span class="type">StreamEvent</span> = 
+  | { <span class="prop">type</span>: <span class="str">'chat.message'</span>; <span class="prop">payload</span>: <span class="type">ChatMessage</span> }
+  | { <span class="prop">type</span>: <span class="str">'chat.delete'</span>; <span class="prop">payload</span>: { <span class="prop">messageId</span>: <span class="type">string</span> } }
+  | { <span class="prop">type</span>: <span class="str">'sub'</span> | <span class="str">'sub.gift'</span> | <span class="str">'follow'</span> | <span class="str">'raid'</span> | <span class="str">'cheer'</span>; <span class="prop">payload</span>: <span class="type">AlertPayload</span> }
+  | { <span class="prop">type</span>: <span class="str">'poll.update'</span>; <span class="prop">payload</span>: <span class="type">PollData</span> };
+
+<span class="kw">export interface</span> <span class="type">EventsContextType</span> {
+  <span class="func">subscribe</span>: (<span class="prop">types</span>: <span class="type">StreamEvent</span>[<span class="str">'type'</span>][], <span class="prop">callback</span>: (<span class="prop">e</span>: <span class="type">StreamEvent</span>) => <span class="type">void</span>) => () => <span class="type">void</span>;
+  <span class="func">emit</span>: (<span class="prop">event</span>: <span class="type">StreamEvent</span>) => <span class="type">void</span>;
+}
+
+<span class="kw">export interface</span> <span class="type">OverlayDefinition</span> {
+  <span class="prop">id</span>: <span class="type">string</span>;
+  <span class="prop">name</span>: <span class="type">string</span>;
+  <span class="prop">component</span>: <span class="type">React.ComponentType</span>&lt;<span class="type">any</span>&gt;;
+  <span class="prop">events</span>: <span class="type">StreamEvent</span>[<span class="str">'type'</span>][];
+}
+            </div>
+            <p style="color: var(--muted); font-size: 0.9rem; margin-top: 1rem;">Consistente con la fase 1 del roadmap en <a href="./arquitectura.html">arquitectura.html</a>. Los componentes en <code>/overlay/[type]</code> solo se suscriben a los eventos que declaran necesitar.</p>
+        </div>
+    </section>
+
+</div>
+
+<script>
+// Lógica de Alertas (Queue System)
+const alertQueue = [];
+let isAlertPlaying = false;
+
+function queueAlert(type) {
+    const alerts = {
+        'sub': { t: 'Nueva Suscripción!', d: 'ElGamer123 se ha suscrito (Mes 2)', c: 'var(--twitch)' },
+        'gift': { t: 'Gift Bomb!', d: 'Westcol regaló 10 subs a la comunidad', c: 'var(--kick)' },
+        'superchat': { t: 'Super Chat - $50', d: 'Carlos: "Gran stream, saludos!"', c: 'var(--youtube)' }
+    };
+    alertQueue.push(alerts[type]);
+    processAlertQueue();
+}
+
+function processAlertQueue() {
+    if (isAlertPlaying || alertQueue.length === 0) return;
+    
+    isAlertPlaying = true;
+    const alert = alertQueue.shift();
+    
+    const box = document.getElementById('alert-box');
+    document.getElementById('alert-title').innerText = alert.t;
+    document.getElementById('alert-desc').innerText = alert.d;
+    document.getElementById('alert-avatar').style.background = `linear-gradient(135deg, #222, ${alert.c})`;
+    box.style.borderColor = alert.c;
+    
+    box.classList.add('show');
+    
+    setTimeout(() => {
+        box.classList.remove('show');
+        setTimeout(() => {
+            isAlertPlaying = false;
+            processAlertQueue();
+        }, 600); // Wait for exit animation
+    }, 3000); // Display duration
+}
+
+// Lógica de Contadores
+let progress = 0;
+const target = 20;
+
+function addProgress(amount) {
+    progress = Math.min(progress + amount, target);
+    updateGoalUI();
+}
+
+function resetProgress() {
+    progress = 0;
+    updateGoalUI();
+    document.getElementById('goal-bar').classList.remove('completed');
+}
+
+function updateGoalUI() {
+    const pct = (progress / target) * 100;
+    document.getElementById('goal-fill').style.width = pct + '%';
+    document.getElementById('goal-current').innerText = progress;
+    
+    if (progress >= target) {
+        document.getElementById('goal-bar').classList.add('completed');
+    }
+}
+
+// Lógica Encuestas
+let votes = [5, 5];
+function votePoll(idx) {
+    votes[idx]++;
+    const total = votes[0] + votes[1];
+    document.getElementById('poll-total').innerText = total;
+    
+    const p0 = Math.round((votes[0] / total) * 100);
+    const p1 = Math.round((votes[1] / total) * 100);
+    
+    document.getElementById('poll-fill-0').style.width = p0 + '%';
+    document.getElementById('poll-pct-0').innerText = p0 + '%';
+    
+    document.getElementById('poll-fill-1').style.width = p1 + '%';
+    document.getElementById('poll-pct-1').innerText = p1 + '%';
+}
+
+// Lógica Lluvia de Emotes
+function triggerEmoteRain() {
+    const layer = document.getElementById('emote-layer');
+    for (let i = 0; i < 20; i++) {
+        setTimeout(() => {
+            const emote = document.createElement('div');
+            emote.className = 'emote';
+            emote.style.left = (Math.random() * 90) + '%';
+            emote.style.animation = `fall ${1 + Math.random()}s linear forwards`;
+            
+            // Random color to simulate different emotes
+            const colors = ['#f0f', '#0ff', '#ff0', 'var(--twitch)', 'var(--kick)'];
+            emote.style.background = `linear-gradient(45deg, #111, ${colors[Math.floor(Math.random()*colors.length)]})`;
+            
+            layer.appendChild(emote);
+            setTimeout(() => emote.remove(), 2000);
+        }, i * 100);
+    }
+}
+
+// Lógica Estado
+function changeStatus() {
+    const val = document.getElementById('status-select').value;
+    const map = {
+        'brb': 'VUELVO ENSEGUIDA',
+        'start': 'EMPEZANDO PRONTO',
+        'end': 'STREAM TERMINADO'
+    };
+    document.getElementById('status-title').innerText = map[val];
+}
+
+// Lógica Moderación
+const authors = [
+    { n: 'fan_1', c: 'var(--twitch)' }, 
+    { n: 'kick_user', c: 'var(--kick)' }, 
+    { n: 'yt_sub', c: 'var(--youtube)' }
+];
+const messages = ['LUL', 'GG', 'que buen stream', 'jajaja', 'F'];
+
+function addChatMsg() {
+    const container = document.getElementById('chat-mod-container');
+    if (container.children.length > 4) {
+        container.removeChild(container.firstChild);
+    }
+    
+    const user = authors[Math.floor(Math.random() * authors.length)];
+    const text = messages[Math.floor(Math.random() * messages.length)];
+    
+    const msg = document.createElement('div');
+    msg.className = 'chat-msg';
+    msg.innerHTML = `<span class="author" style="color: ${user.c}">${user.n}</span><span class="text">${text}</span>`;
+    
+    container.appendChild(msg);
+}
+
+function deleteLastMsg() {
+    const container = document.getElementById('chat-mod-container');
+    const msgs = container.querySelectorAll('.chat-msg:not(.deleted)');
+    if (msgs.length > 0) {
+        msgs[msgs.length - 1].classList.add('deleted');
+    }
+}
+
+// Filtro de tabla
+function filterTable(platform) {
+    document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    const rows = document.querySelectorAll('#events-table tbody tr');
+    rows.forEach(row => {
+        if (platform === 'all' || row.classList.contains(`row-${platform}`)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// URL Builder
+function buildUrl() {
+    const type = document.getElementById('b-type').value;
+    const tw = document.getElementById('b-tw').value;
+    const ki = document.getElementById('b-ki').value;
+    const th = document.getElementById('b-theme').value;
+    
+    let url = `https://chatich.vercel.app/overlay/${type}?`;
+    const params = [];
+    if(tw) params.push(`twitch=${encodeURIComponent(tw)}`);
+    if(ki) params.push(`kick=${encodeURIComponent(ki)}`);
+    if(th) params.push(`theme=${encodeURIComponent(th)}`);
+    
+    document.getElementById('b-result').value = url + params.join('&');
+}
+
+function copyUrl() {
+    const el = document.getElementById('b-result');
+    el.select();
+    document.execCommand('copy');
+    const btn = event.target;
+    btn.innerText = '¡Copiado!';
+    btn.style.background = 'var(--kick)';
+    btn.style.color = '#000';
+    setTimeout(() => {
+        btn.innerText = 'Copiar';
+        btn.style.background = 'var(--accent)';
+        btn.style.color = '#fff';
+    }, 2000);
+}
+</script>
+</body>
+</html>

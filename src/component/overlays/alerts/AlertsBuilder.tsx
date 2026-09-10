@@ -11,6 +11,7 @@ import {
     CheckboxList,
     ColorField,
     OptionCards,
+    OVERLAY_THEME_OPTIONS,
     PreviewButton,
     Section,
     SliderField,
@@ -26,12 +27,6 @@ const POSITION_OPTIONS = [
     { value: 'bottom-center', label: '↓ Abajo' },
     { value: 'bottom-right', label: '↘ Abajo der.' },
     { value: 'center', label: '· Centro' },
-];
-
-const THEME_OPTIONS = [
-    { value: 'dark', label: 'Oscuro' },
-    { value: 'light', label: 'Claro' },
-    { value: 'neon', label: 'Neón' },
 ];
 
 const EVENT_GROUPS: Array<{ key: keyof EventFilters; label: string; types: StreamEventType[] }> = [
@@ -57,7 +52,7 @@ export default function AlertsBuilder() {
 
     const [position, setPosition] = useState('top-center');
     const [durationSeconds, setDurationSeconds] = useState(6);
-    const [theme, setTheme] = useState('dark');
+    const [theme, setTheme] = useState('glass');
     const [useAccent, setUseAccent] = useState(false);
     const [accent, setAccent] = useState('#8B5CF6');
     const [sound, setSound] = useState(false);
@@ -208,7 +203,7 @@ export default function AlertsBuilder() {
             </Section>
 
             <Section title="Apariencia">
-                <OptionCards label="Tema" value={theme} onChange={setTheme} options={THEME_OPTIONS} columns={3} />
+                <OptionCards label="Tema" value={theme} onChange={setTheme} options={OVERLAY_THEME_OPTIONS} />
                 <ToggleField
                     label="Usar un color de acento propio"
                     checked={useAccent}

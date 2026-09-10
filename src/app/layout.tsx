@@ -64,7 +64,7 @@ export default async function RootLayout({
 }>) {
   const lang = await getUserLanguage()
   return (
-    <html lang={lang} className={`bg-transparent ${chakra.variable} ${inter.variable} ${mono.variable}`}>
+    <html lang={lang} className={`dark bg-transparent ${chakra.variable} ${inter.variable} ${mono.variable}`}>
       <body className="antialiased bg-transparent font-inter text-text">
         {children}
       </body>

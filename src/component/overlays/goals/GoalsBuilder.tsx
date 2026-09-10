@@ -9,6 +9,7 @@ import {
     ChannelInputs,
     ColorField,
     OptionCards,
+    OVERLAY_THEME_OPTIONS,
     PreviewButton,
     Section,
     TextField,
@@ -20,11 +21,6 @@ const TYPE_OPTIONS = [
     { value: 'followers', label: 'Seguidores' },
     { value: 'bits', label: 'Bits' },
     { value: 'donations', label: 'Donaciones' },
-];
-
-const THEME_OPTIONS = [
-    { value: 'glass', label: 'Vidrio', hint: 'Translúcido' },
-    { value: 'default', label: 'Sólido', hint: 'Oscuro' },
 ];
 
 export default function GoalsBuilder() {
@@ -145,7 +141,7 @@ export default function GoalsBuilder() {
             </Section>
 
             <Section title="Apariencia">
-                <OptionCards label="Tema" value={theme} onChange={setTheme} options={THEME_OPTIONS} />
+                <OptionCards label="Tema" value={theme} onChange={setTheme} options={OVERLAY_THEME_OPTIONS} />
                 <ColorField label="Color de la barra" value={color} onChange={setColor} />
             </Section>
         </BuilderShell>

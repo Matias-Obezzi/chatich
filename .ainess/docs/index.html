@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chatich · Documentos de diseño</title>
+<style>
+:root{--bg:#08080f;--surface:#12121c;--surface-2:#1a1a28;--border:rgba(255,255,255,.08);--text:#ECECF1;--muted:#9A9AB0;--accent:#7C5CFF;--twitch:#9146FF;--kick:#53FC18;--youtube:#FF0033;--spotify:#1DB954;--apple:#FC3C44;--radius:14px;--font:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;--mono:ui-monospace,'Cascadia Code','Fira Code',monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.6;
+  background-image:radial-gradient(900px 500px at 15% -10%,rgba(124,92,255,.16),transparent 60%),radial-gradient(700px 400px at 90% 0%,rgba(29,185,84,.08),transparent 55%);
+  background-repeat:no-repeat}
+.wrap{max-width:1060px;margin:0 auto;padding:72px 24px 96px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 14px}
+h1{font-size:clamp(34px,5vw,52px);line-height:1.1;margin:0 0 16px;letter-spacing:-.02em}
+.lede{color:var(--muted);font-size:17px;max-width:66ch;margin:0}
+.sec{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:52px 0 4px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.sec span{color:var(--text)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:18px;margin-top:20px}
+a.card{display:flex;flex-direction:column;text-decoration:none;color:inherit;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;transition:transform .18s ease,border-color .18s ease,background .18s ease}
+a.card:hover{transform:translateY(-3px);border-color:rgba(124,92,255,.5);background:var(--surface-2)}
+.num{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:14px}
+.card h2{font-size:20px;margin:0 0 8px;letter-spacing:-.01em}
+.card p{color:var(--muted);font-size:14.5px;margin:0 0 18px;flex:1}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:999px;border:1px solid var(--border);color:var(--muted)}
+.tag.tw{color:var(--twitch);border-color:rgba(145,70,255,.35)}
+.tag.ki{color:var(--kick);border-color:rgba(83,252,24,.3)}
+.tag.yt{color:var(--youtube);border-color:rgba(255,0,51,.35)}
+.tag.sp{color:var(--spotify);border-color:rgba(29,185,84,.35)}
+.tag.ap{color:var(--apple);border-color:rgba(252,60,68,.35)}
+.tag.hot{color:var(--accent);border-color:rgba(124,92,255,.45)}
+.panel{margin-top:56px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:26px 28px}
+.panel h3{margin:0 0 14px;font-size:16px;letter-spacing:-.01em}
+.panel ul{margin:0;padding-left:20px;color:var(--muted);font-size:14.5px}
+.panel li{margin-bottom:9px}
+code{font-family:var(--mono);font-size:.88em;background:var(--surface-2);border:1px solid var(--border);border-radius:5px;padding:1px 6px;color:#cfc6ff}
+strong{color:var(--text);font-weight:600}
+footer{margin-top:48px;color:var(--muted);font-size:13px;font-family:var(--mono)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Chatich · exploración de producto</p>
+  <h1>De un chat overlay<br>a un sistema de overlays</h1>
+  <p class="lede">Cinco documentos interactivos: qué overlays construir, cómo sostenerlos, y si conviene dar el salto a una app de escritorio. Cada uno se abre solo, sin servidor.</p>
+
+  <div class="sec">Qué construir · <span>catálogo</span></div>
+  <div class="grid">
+    <a class="card" href="./overlays-eventos.html">
+      <div class="num">01</div>
+      <h2>Overlays de eventos</h2>
+      <p>Alertas con cola animada, metas, encuestas, lluvia de emotes y pantallas de estado, cada uno con preview real. Incluye qué expone cada plataforma y qué necesita OAuth.</p>
+      <div class="tags"><span class="tag tw">twitch</span><span class="tag ki">kick</span><span class="tag yt">youtube</span><span class="tag">alertas</span></div>
+    </a>
+    <a class="card" href="./overlays-musica.html">
+      <div class="num">02</div>
+      <h2>Overlays de música</h2>
+      <p>Siete estilos de widget «now playing» animados en vivo, transiciones de cambio de track, y la comparativa entre Spotify, Apple Music, Last.fm, SMTC y archivo local.</p>
+      <div class="tags"><span class="tag sp">spotify</span><span class="tag ap">apple music</span><span class="tag">last.fm</span><span class="tag">smtc</span></div>
+    </a>
+  </div>
+
+  <div class="sec">Cómo sostenerlo · <span>arquitectura</span></div>
+  <div class="grid">
+    <a class="card" href="./arquitectura.html">
+      <div class="num">03</div>
+      <h2>Arquitectura y roadmap</h2>
+      <p>El flujo actual mapeado contra el código real, auditoría de deuda técnica verificada, el diseño objetivo con <code>StreamEvent</code> y bus de eventos, y el roadmap en 7 fases.</p>
+      <div class="tags"><span class="tag">deuda técnica</span><span class="tag">event bus</span><span class="tag">roadmap</span></div>
+    </a>
+  </div>
+
+  <div class="sec">Hasta dónde puede llegar · <span>desktop</span></div>
+  <div class="grid">
+    <a class="card" href="./desktop-tauri.html">
+      <div class="num">04</div>
+      <h2>App de escritorio con Tauri</h2>
+      <p>El salto a desktop: OAuth nativo con PKCE y keychain, detección de música a nivel sistema operativo, y el modelo híbrido donde la web sobrevive como tier gratis.</p>
+      <div class="tags"><span class="tag hot">tauri</span><span class="tag">oauth</span><span class="tag">gsmtc</span><span class="tag">migración</span></div>
+    </a>
+    <a class="card" href="./automatizacion.html">
+      <div class="num">05</div>
+      <h2>Automatización</h2>
+      <p>Controlar la PC ante eventos del chat: modelo trigger → condición → acción, constructor de reglas funcional, catálogo de acciones y el modelo de seguridad.</p>
+      <div class="tags"><span class="tag hot">reglas</span><span class="tag">obs</span><span class="tag">seguridad</span><span class="tag">hardware</span></div>
+    </a>
+  </div>
+
+  <div class="panel">
+    <h3>El hilo conductor de los cinco</h3>
+    <ul>
+      <li>Hoy <code>MessagesContext</code> modela <em>chat</em>, no <em>eventos</em>. Un <code>StreamEvent</code> normalizado más un bus que lo distribuya es la pieza que habilita todo el resto — alertas, metas, música y automatización son casos particulares de lo mismo.</li>
+      <li>Ese bus es además lo que permite que la versión web y la de escritorio compartan los mismos componentes de overlay: lo único que cambia es de dónde vienen los eventos.</li>
+      <li>El parser de Kick ya reconoce subs, gifts, hosts, encuestas y baneos — y los descarta. Hay eventos gratis sobre la mesa, sin credenciales de nadie.</li>
+      <li>Todo lo que requiere permisos de broadcaster (follows y raids de Twitch, canjes de puntos, música fuera de Spotify) empuja hacia el desktop. No es capricho: en web no hay forma limpia de sostener tokens ni de ver qué suena en la máquina.</li>
+      <li><strong>El chat aporta datos, nunca código.</strong> Si se automatiza la PC, esa es la línea que no se cruza.</li>
+    </ul>
+  </div>
+
+  <footer>.ainess/docs · generado por el equipo · abrir con doble clic</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Motor de Automatización - Chatich</title>
+<style>
+:root{--bg:#08080f;--surface:#12121c;--surface-2:#1a1a28;--border:rgba(255,255,255,.08);--text:#ECECF1;--muted:#9A9AB0;--accent:#7C5CFF;--twitch:#9146FF;--kick:#53FC18;--youtube:#FF0033;--spotify:#1DB954;--apple:#FC3C44;--radius:14px;--font:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;--mono:ui-monospace,'Cascadia Code','Fira Code',monospace}
+body { background: var(--bg); color: var(--text); font-family: var(--font); margin: 0; padding: 0; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+* { box-sizing: border-box; }
+h1, h2, h3, h4 { color: #fff; font-weight: 600; margin-top: 0; }
+h1 { font-size: 2.2rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; }
+h2 { font-size: 1.5rem; margin: 3rem 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem; }
+h2::before { content: '#'; color: var(--accent); }
+a { color: var(--accent); text-decoration: none; }
+.layout { max-width: 1400px; margin: 0 auto; padding: 2rem; display: grid; grid-template-columns: 260px 1fr; gap: 3rem; align-items: start; }
+nav.sidebar { position: sticky; top: 2rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem 1rem; }
+nav.sidebar ul { list-style: none; padding: 0; margin: 0; }
+nav.sidebar li { margin-bottom: 0.25rem; }
+nav.sidebar a { color: var(--muted); display: block; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 500; font-size: 0.95rem; transition: all 0.2s; }
+nav.sidebar a:hover, nav.sidebar a.active { background: var(--surface-2); color: #fff; }
+.main-content { min-width: 0; }
+section { margin-bottom: 4rem; scroll-margin-top: 3rem; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; }
+.pre-code { font-family: var(--mono); font-size: 0.85rem; background: var(--surface-2); padding: 1.25rem; border-radius: 8px; overflow-x: auto; border: 1px solid var(--border); margin: 1rem 0; color: #abb2bf; }
+.kw { color: #c678dd; } .type { color: #e5c07b; } .str { color: #98c379; } .comment { color: #5c6370; } .func { color: #61afef; } .prop { color: #e06c75; } .num { color: #d19a66; }
+.builder-ui { display: flex; flex-direction: column; gap: 1.5rem; }
+.builder-row { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+.builder-label { font-weight: 500; color: var(--muted); width: 120px; }
+.builder-select, .builder-input { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 0.5rem 1rem; border-radius: 8px; font-family: var(--font); font-size: 0.95rem; flex: 1; min-width: 200px; }
+.builder-select:focus, .builder-input:focus { outline: none; border-color: var(--accent); }
+.builder-output { background: #0d0d14; border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+.builder-sentence { font-size: 1.1rem; font-style: italic; color: #fff; border-left: 3px solid var(--accent); padding-left: 1rem; }
+.builder-json { font-family: var(--mono); font-size: 0.85rem; color: #98c379; white-space: pre-wrap; margin: 0; }
+.btn-group { display: flex; gap: 0.5rem; margin-top: 1rem; }
+.btn { background: var(--accent); color: #fff; border: none; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; font-family: var(--font); font-size: 0.9rem; }
+.btn:hover { opacity: 0.9; }
+.btn-secondary { background: var(--surface-2); border: 1px solid var(--border); }
+.btn-secondary:hover { background: var(--border); }
+.rule-list { margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem; }
+.rule-item { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; }
+.rule-item-title { font-weight: 600; color: #fff; }
+.checklist-item { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1rem; background: var(--surface-2); padding: 1rem; border-radius: 8px; border: 1px solid var(--border); transition: border-color 0.2s; }
+.checklist-item:has(input:checked) { border-color: var(--accent); background: rgba(124, 92, 255, 0.05); }
+.checklist-item input[type="checkbox"] { margin-top: 0.25rem; width: 1.2rem; height: 1.2rem; accent-color: var(--accent); cursor: pointer; }
+.checklist-item label { cursor: pointer; flex: 1; }
+.checklist-item strong { display: block; color: #fff; margin-bottom: 0.25rem; font-size: 1.05rem; }
+.checklist-item p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+.examples-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; }
+.example-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; display: flex; flex-direction: column; }
+.example-card h3 { font-size: 1.1rem; margin-top: 0; margin-bottom: 0.5rem; }
+.example-card p { color: var(--muted); font-size: 0.9rem; margin-top: 0; margin-bottom: 1rem; flex: 1; }
+.example-card .pre-code { margin: 0; padding: 1rem; }
+.diagram-wrapper { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 2rem; margin-bottom: 2rem; overflow-x: auto; }
+.actions-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+.action-cat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; }
+.action-cat h3 { margin-top: 0; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; color: #fff; }
+.action-item { margin-bottom: 1.25rem; font-size: 0.95rem; }
+.action-item:last-child { margin-bottom: 0; }
+.action-item strong { display: flex; justify-content: space-between; align-items: center; color: var(--text); margin-bottom: 0.25rem; }
+.action-item p { margin: 0; color: var(--muted); }
+.badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+.badge.low { background: rgba(124, 92, 255, 0.15); color: #b399ff; }
+.badge.med { background: rgba(255, 170, 0, 0.15); color: #ffc233; }
+.badge.high { background: rgba(255, 0, 51, 0.15); color: #ff4d6d; }
+.sim-log { margin-top: 1rem; background: var(--bg); padding: 1rem; border-radius: 8px; border: 1px solid var(--border); max-height: 250px; overflow-y: auto; font-family: var(--mono); font-size: 0.85rem; }
+.log-entry { margin-bottom: 0.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+.log-entry:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+.log-time { color: var(--muted); margin-right: 0.5rem; }
+.log-success { color: var(--kick); }
+.log-fail { color: var(--youtube); }
+.intro-text { color: var(--muted); font-size: 1.1rem; margin-bottom: 2rem; max-width: 800px; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <nav class="sidebar">
+    <ul>
+      <li><a href="#modelo" class="active">Modelo de Automatización</a></li>
+      <li><a href="#constructor">Constructor Interactivo</a></li>
+      <li><a href="#catalogo">Catálogo de Acciones</a></li>
+      <li><a href="#seguridad">Modelo de Seguridad</a></li>
+      <li><a href="#recetas">Recetas Listas</a></li>
+      <li><a href="#arquitectura">Arquitectura de Ejecución</a></li>
+    </ul>
+  </nav>
+
+  <main class="main-content">
+    <h1>Automatización y Reglas</h1>
+    <p class="intro-text">
+      Documentación interactiva sobre el motor de automatización. El paso de web a escritorio con <strong>Tauri</strong> nos permite escalar Chatich de un simple overlay a un controlador absoluto del stream. Esta guía detalla cómo los eventos del chat (mensajes, subs, donaciones de Kick, Twitch y YouTube) pueden desencadenar acciones reales en la PC del streamer.
+    </p>
+
+    <!-- 1. El modelo Trigger -> Condición -> Acción -->
+    <section id="modelo">
+      <h2>El modelo Trigger → Condición → Acción</h2>
+      <p>
+        Para mantener la escalabilidad y no convertir el código en una maraña de callbacks <em>spaghetti</em>, el núcleo del motor se diseña como una tubería unidireccional y predecible. Un evento crudo entra al bus del sistema, pasa por una serie de filtros estrictos que determinan si debe ejecutarse, y finalmente genera una tarea que se encola en el gestor de acciones del sistema operativo.
+      </p>
+      
+      <div class="diagram-wrapper">
+        <svg viewBox="0 0 800 150" style="width: 100%; height: auto;">
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--muted)" />
+            </marker>
+          </defs>
+          <!-- Trigger -->
+          <g transform="translate(10, 50)">
+            <rect x="0" y="0" width="160" height="50" rx="8" fill="var(--surface-2)" stroke="var(--border)" stroke-width="2"/>
+            <text x="80" y="30" text-anchor="middle" fill="#fff" font-family="var(--font)" font-size="14">Trigger</text>
+            <text x="80" y="65" text-anchor="middle" fill="var(--muted)" font-family="var(--font)" font-size="11">StreamEvent (Bus)</text>
+          </g>
+          <path d="M 170 75 L 240 75" fill="none" stroke="var(--muted)" stroke-width="2" marker-end="url(#arrow)"/>
+          
+          <!-- Condiciones -->
+          <g transform="translate(250, 50)">
+            <rect x="0" y="0" width="160" height="50" rx="8" fill="rgba(124, 92, 255, 0.15)" stroke="var(--accent)" stroke-width="2"/>
+            <text x="80" y="30" text-anchor="middle" fill="#fff" font-family="var(--font)" font-size="14">Condiciones</text>
+            <text x="80" y="65" text-anchor="middle" fill="var(--muted)" font-family="var(--font)" font-size="11">Filtros, Cooldowns</text>
+          </g>
+          <path d="M 410 75 L 480 75" fill="none" stroke="var(--muted)" stroke-width="2" marker-end="url(#arrow)"/>
+          
+          <!-- Acción -->
+          <g transform="translate(490, 50)">
+            <rect x="0" y="0" width="160" height="50" rx="8" fill="var(--surface-2)" stroke="var(--border)" stroke-width="2"/>
+            <text x="80" y="30" text-anchor="middle" fill="#fff" font-family="var(--font)" font-size="14">Action Queue</text>
+            <text x="80" y="65" text-anchor="middle" fill="var(--muted)" font-family="var(--font)" font-size="11">Rust Worker Thread</text>
+          </g>
+          <path d="M 650 75 L 720 75" fill="none" stroke="var(--muted)" stroke-width="2" marker-end="url(#arrow)"/>
+          
+          <!-- Sistema/PC -->
+          <circle cx="740" cy="75" r="22" fill="var(--accent)"/>
+          <text x="740" y="80" text-anchor="middle" fill="#fff" font-family="var(--font)" font-size="14">OS / HW</text>
+        </svg>
+      </div>
+
+      <p>
+        Para unificar la comunicación entre el frontend (React/TypeScript) que edita las reglas y el backend (Rust/Tauri) que las ejecuta, las entidades deben tener una representación serializable en JSON estricta y compartida. A continuación, el esquema de tipos propuesto:
+      </p>
+      
+      <div class="pre-code">
+<span class="kw">export interface</span> <span class="type">AutomationRule</span> {
+  <span class="prop">id</span>: <span class="type">string</span>;
+  <span class="prop">name</span>: <span class="type">string</span>;
+  <span class="prop">enabled</span>: <span class="type">boolean</span>;
+  <span class="prop">trigger</span>: <span class="type">Trigger</span>;
+  <span class="prop">conditions</span>: <span class="type">Condition</span>[];
+  <span class="prop">actions</span>: <span class="type">Action</span>[];
+}
+
+<span class="comment">// Los triggers nacen directamente del union StreamEvent del EventBus</span>
+<span class="kw">export type</span> <span class="type">Trigger</span> = 
+  | { <span class="prop">type</span>: <span class="str">'chat.message'</span> }
+  | { <span class="prop">type</span>: <span class="str">'sub'</span> | <span class="str">'sub.gift'</span> | <span class="str">'follow'</span> | <span class="str">'raid'</span> | <span class="str">'cheer'</span> }
+  | { <span class="prop">type</span>: <span class="str">'point_redemption'</span>; <span class="prop">rewardId</span>?: <span class="type">string</span> };
+
+<span class="comment">// Los filtros evalúan el estado o payload del trigger</span>
+<span class="kw">export type</span> <span class="type">Condition</span> = 
+  | { <span class="prop">type</span>: <span class="str">'permission'</span>; <span class="prop">level</span>: <span class="str">'all'</span> | <span class="str">'sub'</span> | <span class="str">'mod'</span> | <span class="str">'broadcaster'</span> }
+  | { <span class="prop">type</span>: <span class="str">'min_amount'</span>; <span class="prop">value</span>: <span class="type">number</span> }
+  | { <span class="prop">type</span>: <span class="str">'cooldown'</span>; <span class="prop">seconds</span>: <span class="type">number</span>; <span class="prop">perUser</span>: <span class="type">boolean</span> }
+  | { <span class="prop">type</span>: <span class="str">'text_match'</span>; <span class="prop">pattern</span>: <span class="type">string</span>; <span class="prop">exact</span>: <span class="type">boolean</span> };
+
+<span class="comment">// Cada acción define parámetros fuertes; no hay comandos raw sin tipar</span>
+<span class="kw">export type</span> <span class="type">Action</span> = 
+  | { <span class="prop">type</span>: <span class="str">'obs.scene_change'</span>; <span class="prop">sceneName</span>: <span class="type">string</span> }
+  | { <span class="prop">type</span>: <span class="str">'audio.play_sound'</span>; <span class="prop">filePath</span>: <span class="type">string</span>; <span class="prop">volume</span>: <span class="type">number</span> }
+  | { <span class="prop">type</span>: <span class="str">'system.keypress'</span>; <span class="prop">keys</span>: <span class="type">string</span>[] }
+  <span class="comment">// ... Referirse al Catálogo de Acciones para ver la lista exhaustiva</span></div>
+    </section>
+
+    <!-- 2. Constructor de reglas INTERACTIVO -->
+    <section id="constructor">
+      <h2>Constructor de Reglas Interactivo</h2>
+      <p>
+        El panel de creación de reglas es la pieza central del usuario. La experiencia de usuario (UX) está diseñada para formar oraciones en lenguaje natural a medida que se encadenan opciones en los <code>selects</code>, haciendo obvia la consecuencia de la automatización antes de guardarla.
+      </p>
+      
+      <div class="card">
+        <div class="builder-ui">
+          <div class="builder-row">
+            <div class="builder-label">Evento (Trigger)</div>
+            <select id="triggerSelect" class="builder-select" onchange="updateBuilder()">
+              <option value="chat.message">Mensaje de Chat</option>
+              <option value="sub">Suscripción</option>
+              <option value="sub.gift">Regalo de Subs</option>
+              <option value="cheer">Bits / Superchat</option>
+              <option value="point_redemption">Canje de Puntos de Canal</option>
+              <option value="raid">Raid (Host)</option>
+              <option value="follow">Nuevo Follow</option>
+            </select>
+          </div>
+          
+          <div class="builder-row">
+            <div class="builder-label">Permiso Requerido</div>
+            <select id="permSelect" class="builder-select" onchange="updateBuilder()">
+              <option value="all">Cualquiera (Todos)</option>
+              <option value="sub">Solo Suscriptores (Subs)</option>
+              <option value="mod">Solo Moderadores (Mods)</option>
+              <option value="broadcaster">Solo Broadcaster (Streamer)</option>
+            </select>
+          </div>
+          
+          <div class="builder-row">
+            <div class="builder-label">Monto Mínimo</div>
+            <input type="number" id="amountInput" class="builder-input" value="0" min="0" oninput="updateBuilder()" placeholder="Ej: 100 bits, 5 subs, 50 viewers">
+          </div>
+          
+          <div class="builder-row">
+            <div class="builder-label">Cooldown (seg)</div>
+            <input type="number" id="cooldownInput" class="builder-input" value="30" min="0" oninput="updateBuilder()">
+          </div>
+
+          <div class="builder-row">
+            <div class="builder-label">Acción Resultante</div>
+            <select id="actionSelect" class="builder-select" onchange="updateBuilder()">
+              <optgroup label="OBS Studio">
+                <option value="obs.scene_change">Cambiar la escena</option>
+                <option value="obs.toggle_source">Mostrar/ocultar fuente</option>
+              </optgroup>
+              <optgroup label="Audio y Voz">
+                <option value="audio.play_sound">Reproducir un sonido local</option>
+                <option value="audio.tts">Leer el mensaje por voz (TTS)</option>
+              </optgroup>
+              <optgroup label="Control de Sistema">
+                <option value="system.keypress">Simular teclas (Shortcuts)</option>
+                <option value="system.launch_app">Lanzar una aplicación .exe</option>
+              </optgroup>
+              <optgroup label="Música">
+                <option value="music.add_queue">Agregar a la cola de Spotify</option>
+              </optgroup>
+              <optgroup label="Overlays Propios">
+                <option value="overlay.alert">Disparar alerta en pantalla</option>
+              </optgroup>
+              <optgroup label="Hardware Físico">
+                <option value="hw.hue_color">Cambiar color de luces Hue</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <div class="builder-output">
+            <div class="builder-sentence" id="previewSentence">Cargando oracion...</div>
+            <pre class="builder-json" id="previewJson"></pre>
+            <div class="btn-group">
+              <button class="btn" onclick="copyJson()">Copiar JSON al portapapeles</button>
+              <button class="btn btn-secondary" onclick="addRule()">Añadir a la lista de ejecución</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h3>Lista Activa y Simulación de Eventos</h3>
+      <p>
+        Agregá reglas y usá el simulador de eventos aleatorios. Verás cómo el motor evalúa en tiempo real las condiciones (cooldown, permisos) y decide si disparar la acción o bloquearla. Esto representa el loop del Worker de Rust.
+      </p>
+      <div class="btn-group" style="margin-bottom: 1rem;">
+        <button class="btn" onclick="simulateEvent()">Simular Evento Aleatorio desde Chat</button>
+        <button class="btn btn-secondary" onclick="clearLogs()">Limpiar Consola de Logs</button>
+      </div>
+      
+      <div class="rule-list" id="activeRulesList">
+        <div class="rule-item"><span style="color:var(--muted)">No hay reglas guardadas. Añadí una desde el constructor de arriba.</span></div>
+      </div>
+      
+      <div class="sim-log" id="simulationLog"></div>
+    </section>
+
+    <!-- 3. Catálogo de Acciones -->
+    <section id="catalogo">
+      <h2>Catálogo de Acciones</h2>
+      <p>
+        Al convertir Chatich en una aplicación Tauri de escritorio, ganamos capacidades imposibles en un entorno web tradicional. Las acciones se agrupan por dominio de impacto y se catalogan según su esfuerzo de desarrollo (integración con crates de Rust o protocolos de terceros).
+      </p>
+      
+      <div class="actions-grid">
+        <div class="action-cat">
+          <h3>Integración con OBS Studio</h3>
+          <div class="action-item">
+            <strong>Cambiar escena y Toggle de fuentes <span class="badge low">Bajo</span></strong>
+            <p>Vía <code>obs-websocket</code> v5. Se conecta al puerto local 4455. Al ser un WebSocket puro, no requiere plugins adicionales en OBS más allá del incluido de fábrica. Las promesas devuelven el ACK confirmando el cambio.</p>
+          </div>
+          <div class="action-item">
+            <strong>Filtros y Grabación <span class="badge low">Bajo</span></strong>
+            <p>Permite encender y apagar filtros específicos de la cámara (ej. Blanco y Negro) por X segundos y volver al estado original, o manejar el <em>Replay Buffer</em> para sacar clips automáticos.</p>
+          </div>
+        </div>
+        
+        <div class="action-cat">
+          <h3>Motor de Audio y Voz</h3>
+          <div class="action-item">
+            <strong>Reproductor de Sonidos <span class="badge low">Bajo</span></strong>
+            <p>Usando el crate <code>rodio</code> en Rust para abrir y decodificar mp3/wav locales. Evita totalmente la dependencia inestable de usar un tag <code>&lt;audio&gt;</code> oculto en Chromium/Webview.</p>
+          </div>
+          <div class="action-item">
+            <strong>Lectura TTS (Text-to-Speech) <span class="badge med">Medio</span></strong>
+            <p>Se realiza en el backend mediante el crate <code>tts</code>, que mapea a la API nativa SAPI5 en Windows, o alternativamente integrando endpoints HTTP externos de ElevenLabs / OpenAI.</p>
+          </div>
+          <div class="action-item">
+            <strong>Mezclador de Volumen WASAPI <span class="badge high">Alto</span></strong>
+            <p>Mutear o atenuar (ducking) el volumen de Spotify a nivel sistema (System Mixer) cuando el streamer habla. Requiere interactuar con la API CoreAudio de Windows (C++ bindings).</p>
+          </div>
+        </div>
+
+        <div class="action-cat">
+          <h3>Input y Comandos de Sistema</h3>
+          <div class="action-item">
+            <strong>Simulador de Teclas y Macros <span class="badge med">Medio</span></strong>
+            <p>Integrando el crate <code>enigo</code>. Permite inyectar pulsaciones virtuales a nivel de sistema operativo. Útil para atajos globales en otros programas, mutear Discord, o presionar botones en juegos.</p>
+          </div>
+          <div class="action-item">
+            <strong>Ejecución de Subprocesos (CLI) <span class="badge high">Alto</span></strong>
+            <p>Invocar archivos <code>.bat</code>, <code>.exe</code>, o scripts de Python locales. Extremadamente potente pero requiere un sanitizado paranoico para evitar <em>Command Injection</em> mediante variables interpoladas.</p>
+          </div>
+        </div>
+
+        <div class="action-cat">
+          <h3>Música, Hardware y Externa</h3>
+          <div class="action-item">
+            <strong>Controlador de Spotify <span class="badge med">Medio</span></strong>
+            <p>Requests autenticados vía OAuth PKCE a la API REST de Spotify. Permite pausar, dar skip, o dejar que los viewers añadan canciones a la cola validando su duración.</p>
+          </div>
+          <div class="action-item">
+            <strong>Iluminación Inteligente <span class="badge med">Medio</span></strong>
+            <p>Peticiones HTTP locales al hub (Philips Hue Bridge) o controladores WLED en la misma red LAN. Se usa para cambiar el cuarto a color rojo cuando ocurre un evento crítico.</p>
+          </div>
+          <div class="action-item">
+            <strong>Webhooks y Discord <span class="badge low">Bajo</span></strong>
+            <p>Disparar requests HTTP POST/GET hacia el exterior. Por ejemplo, notificar automáticamente en un servidor de Discord que el stream ha comenzado o que hubo una raid gigantesca.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Modelo de Seguridad -->
+    <section id="seguridad">
+      <h2>Modelo de Seguridad y Auditoría</h2>
+      <p>
+        Una aplicación que posee privilegios para ejecutar macros de teclado, lanzar ejecutables o cambiar configuraciones en la máquina del streamer en respuesta a <strong>mensajes no confiables de internet</strong> es una superficie de ataque inmensa. El objetivo de Chatich no es evitar la automatización por miedo, sino blindarla por diseño. Las siguientes reglas son de cumplimiento estricto.
+      </p>
+      
+      <div class="checklist">
+        <div class="checklist-item">
+          <input type="checkbox" id="chk1" checked>
+          <label for="chk1">
+            <strong>La regla de oro: el chat aporta DATOS, nunca CÓDIGO.</strong>
+            <p>El creador del canal es el único que define la plantilla de la acción. El chat solo provee relleno para variables explícitamente limitadas (ejemplo: <code>$username</code> o <code>$amount</code>). Está terminantemente prohibida cualquier acción genérica tipo <code>eval()</code>, bash raw o ejecución dinámica que intérprete strings del chat como código.</p>
+          </label>
+        </div>
+        
+        <div class="checklist-item">
+          <input type="checkbox" id="chk2" checked>
+          <label for="chk2">
+            <strong>Modelo de Autorización por defecto (Deny-All)</strong>
+            <p>Al importar un archivo de configuración de otro streamer, descargar un tema, o actualizar el software, todas las reglas que interactúen agresivamente con el sistema local (ejecución de scripts, pulsaciones de teclas) se marcan como <em>deshabilitadas</em>. El usuario debe activar el toggle manualmente reconociendo la acción.</p>
+          </label>
+        </div>
+        
+        <div class="checklist-item">
+          <input type="checkbox" id="chk3" checked>
+          <label for="chk3">
+            <strong>Cooldowns Forzosos, Límite de Ráfaga y Blacklists</strong>
+            <p>Los atacantes pueden usar bots de chat para saturar la cola de comandos (por ejemplo, spammear el sonido de alerta miles de veces o tirar la conexión con webhooks). La interfaz impondrá un cooldown mínimo subyacente para acciones destructivas e incluirá capacidad de blacklistear usuarios tóxicos a nivel motor global.</p>
+          </label>
+        </div>
+        
+        <div class="checklist-item">
+          <input type="checkbox" id="chk4">
+          <label for="chk4">
+            <strong>Botón de Pánico (Kill Switch / Purge)</strong>
+            <p>Tanto en la UI como mediante un hotkey global a nivel OS (ej. Ctrl+Shift+F12), debe existir un mecanismo atómico que vacíe inmediatamente la <code>Action Queue</code> de Rust y apague todos los motores, deteniendo cualquier cascada de automatizaciones en curso.</p>
+          </label>
+        </div>
+
+        <div class="checklist-item">
+          <input type="checkbox" id="chk5">
+          <label for="chk5">
+            <strong>Sanitización Rigurosa (Escape y Limitación de Longitud)</strong>
+            <p>Cualquier input que fluya hacia TTS o comandos de terminal debe sanitizarse brutalmente: eliminar secuencias de escape (<code>\n \r \0</code>), remover comillas problemáticas (<code>" ' `</code>) y restringir longitudes máximas (ej. máximo 50 caracteres para un texto de voz) para evitar <em>buffer overflows</em> o inyección de shell.</p>
+          </label>
+        </div>
+
+        <div class="checklist-item">
+          <input type="checkbox" id="chk6">
+          <label for="chk6">
+            <strong>Manejo de Falsos Positivos (EDR y Antivirus)</strong>
+            <p>Advertencia operativa y arquitectónica: inyectar keystrokes a otros procesos o crear hooks de teclado globales casi siempre detona análisis heurísticos en Windows Defender y software EDR. Chatich debe documentar esta limitación e indispensablemente distribuir sus binarios con firmas de código válidas (Code Signing Certificate).</p>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Recetas Listas -->
+    <section id="recetas">
+      <h2>Recetas Listas y Ejemplos Concretos</h2>
+      <p>
+        Para reducir la curva de aprendizaje, el motor debe incluir <em>presets</em> o "recetas" que cubran los casos de uso más comunes en la industria del streaming (inspirados en Lumia Stream o Streamer.bot). Aquí se exponen ejemplos de JSON que el motor parsearía.
+      </p>
+
+      <div class="examples-grid">
+        
+        <!-- Receta 1 -->
+        <div class="example-card">
+          <h3>1. Modo BRB para Moderadores</h3>
+          <p>Un mod escribe el comando <code>!brb</code> (Be Right Back) en el chat y el motor cambia instantáneamente la escena de OBS y mutea el micrófono.</p>
+          <div class="pre-code">
+{
+  "trigger": "chat.message",
+  "conditions": [
+    { "type": "permission", "level": "mod" },
+    { "type": "text_match", "pattern": "!brb" }
+  ],
+  "actions": [
+    { "type": "obs.scene_change", "scene": "Vuelvo Enseguida" },
+    { "type": "obs.mute_source", "source": "Micrófono USB" }
+  ]
+}</div>
+        </div>
+
+        <!-- Receta 2 -->
+        <div class="example-card">
+          <h3>2. Alerta de Raid Épica + Luces</h3>
+          <p>Cuando ocurre una raid masiva (más de 50 viewers), se dispara un overlay especial, suena un audio alto y las luces físicas parpadean.</p>
+          <div class="pre-code">
+{
+  "trigger": "raid",
+  "conditions": [
+    { "type": "min_amount", "value": 50 }
+  ],
+  "actions": [
+    { "type": "overlay.alert", "theme": "raid_epic" },
+    { "type": "audio.play_sound", "file": "horn.mp3" },
+    { "type": "hw.hue_color", "color": "#FF0000" }
+  ]
+}</div>
+        </div>
+
+        <!-- Receta 3 -->
+        <div class="example-card">
+          <h3>3. Mutear Discord temporalmente (Puntos)</h3>
+          <p>Un usuario canjea un premio en Twitch. El motor simula el atajo global de teclado (Mute) para silenciar el chat de voz de Discord por un susto.</p>
+          <div class="pre-code">
+{
+  "trigger": "point_redemption",
+  "conditions": [
+    { "type": "cooldown", "seconds": 120 }
+  ],
+  "actions": [
+    { "type": "system.keypress", "keys": ["Ctrl", "Shift", "M"] }
+  ]
+}</div>
+        </div>
+
+        <!-- Receta 4 -->
+        <div class="example-card">
+          <h3>4. Pedir Canción (Bits)</h3>
+          <p>Un usuario dona 100 bits aportando un link de Spotify, el sistema lo valida y lo inyecta a la cola musical del streamer.</p>
+          <div class="pre-code">
+{
+  "trigger": "cheer",
+  "conditions": [
+    { "type": "min_amount", "value": 100 }
+  ],
+  "actions": [
+    { "type": "music.add_queue", "url": "$message.words[0]" }
+  ]
+}</div>
+        </div>
+
+        <!-- Receta 5 -->
+        <div class="example-card">
+          <h3>5. Sustos y Jumpscares (Gift Subs)</h3>
+          <p>Regalar una suscripción a la comunidad ejecuta un sonido estridente de forma inmediata, saltándose colas lentas y con un cooldown muy restrictivo de 5 minutos.</p>
+          <div class="pre-code">
+{
+  "trigger": "sub.gift",
+  "conditions": [
+    { "type": "cooldown", "seconds": 300 }
+  ],
+  "actions": [
+    { "type": "audio.play_sound", "file": "scream.wav", "vol": 100 }
+  ]
+}</div>
+        </div>
+
+        <!-- Receta 6 -->
+        <div class="example-card">
+          <h3>6. Comando Respondedor <code>!song</code></h3>
+          <p>Cualquier viewer consulta qué tema está sonando en ese momento. Chatich lee el estado del widget musical local y envía la respuesta como chat text.</p>
+          <div class="pre-code">
+{
+  "trigger": "chat.message",
+  "conditions": [
+    { "type": "text_match", "pattern": "!song" },
+    { "type": "cooldown", "seconds": 15 }
+  ],
+  "actions": [
+    { "type": "chat.reply", "text": "🎵 Suena: $current_song" }
+  ]
+}</div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 6. Arquitectura de Ejecución -->
+    <section id="arquitectura">
+      <h2>Arquitectura de Ejecución Profunda (Tauri Backend)</h2>
+      <p>
+        Toda la inteligencia real del motor de reglas reside exclusivamente en el binario compilado (Rust) de Tauri. El front-end en React.js, que los usuarios visualizan en la ventana principal, funciona puramente como un editor (Configurator) sin estado persistente local más allá de la UI temporal.
+      </p>
+      
+      <div class="card">
+        <h3>1. Bus de Recepción (Event Ingestion)</h3>
+        <p>
+          Los adaptadores de plataforma (conexiones WebSocket hacia Kick, Twitch, y el polling hacia YouTube) inyectan structs genéricos <code>StreamEvent</code> hacia un canal asíncrono MPSC (Multi-Producer, Single-Consumer) manejado por <code>tokio</code>. Esto desacopla 100% las plataformas subyacentes del motor lógico principal, unificando la abstracción de eventos.
+        </p>
+        
+        <h3>2. Motor Evaluador (Matcher Thread)</h3>
+        <p>
+          Existe un hilo dedicado (Worker Thread) que consume pasivamente el canal MPSC. Ante la llegada de un evento, iterará sobre la lista de <code>AutomationRules</code> cargadas en el Heap de memoria. Para cada regla cuyo Trigger coincida, se evalúan secuencialmente sus Condiciones. Si la regla involucra un cooldown, el Worker consulta a una caché local concurrente (tipo <code>DashMap</code>). Si todas las aserciones son verdaderas (pasan), la regla madura a la etapa de ejecución y genera una tarea concreta (<code>ActionTask</code>).
+        </p>
+        
+        <h3>3. Cola de Acciones Concurrente (Action Pool)</h3>
+        <p>
+          Las acciones generadas no son inmediatas. Se despachan a un Thread Pool dedicado a I/O u operaciones de sistema (OS Blocking Operations). Sin embargo, Chatich requiere inteligencia artificial sobre concurrencia:
+        </p>
+        <ul>
+          <li style="margin-bottom: 0.5rem; color: var(--muted)"><strong>Secuencialidad garantizada:</strong> Las lecturas de TTS o audios largos no deben superponerse en cacofonía, por lo cual se encolan linealmente en un worker dedicado al sonido.</li>
+          <li style="margin-bottom: 0.5rem; color: var(--muted)"><strong>Debouncing:</strong> Múltiples comandos concurrentes para "cambiar la escena a BRB" se dediplican automáticamente a un solo request al WebSocket de OBS.</li>
+          <li style="margin-bottom: 0.5rem; color: var(--muted)"><strong>Asincronía paralela:</strong> Luces y webhooks se ejecutan masivamente en fire-and-forget, sin retrasar otras tareas críticas del UI.</li>
+        </ul>
+        
+        <h3>4. IPC (Inter-Process Communication), Persistencia y Exportación</h3>
+        <p>
+          Cuando el front-end requiere guardar una regla del constructor, envía un payload serializado a través de los Tauri Commands (IPC local). El backend en Rust las consolida y las escribe en un archivo seguro en el <code>%APPDATA%/Chatich/rules.json</code> del sistema.
+        </p>
+        <p>
+          Para facilitar una comunidad de creadores, se incluye un formato de exportación donde el JSON de reglas enteras es comprimido (Zlib) y codificado en Base64 seguro para URL, proveyendo un enlace mágico como <code>chatich://import?data=eyJuYW1lIjoi...</code> que otros streamers pueden pegar en su cliente.
+        </p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  // Navbar Spy Highlight
+  const sections = document.querySelectorAll('section');
+  const navLinks = document.querySelectorAll('.sidebar a');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(section => {
+      const offset = section.offsetTop - 150;
+      if (scrollY >= offset) {
+        current = section.getAttribute('id');
+      }
+    });
+    navLinks.forEach(a => {
+      a.classList.remove('active');
+      if (a.getAttribute('href') === '#' + current) {
+        a.classList.add('active');
+      }
+    });
+  });
+
+  // Builder Core Data
+  const triggerMap = {
+    'chat.message': 'escriba un mensaje en el chat',
+    'sub': 'se suscriba al canal',
+    'sub.gift': 'regale una suscripción (gift)',
+    'cheer': 'mande bits o superchat monetario',
+    'point_redemption': 'canjee una recompensa de puntos de canal',
+    'raid': 'haga una raid o un host',
+    'follow': 'dé un nuevo follow'
+  };
+  
+  const permMap = {
+    'all': 'cualquier usuario de la audiencia',
+    'sub': 'exclusivamente un suscriptor de pago',
+    'mod': 'alguien del equipo de moderadores',
+    'broadcaster': 'el propio streamer (Broadcaster)'
+  };
+  
+  const actionMap = {
+    'obs.scene_change': 'cambiar forzosamente la escena de OBS',
+    'obs.toggle_source': 'mostrar u ocultar una fuente específica de OBS',
+    'audio.play_sound': 'reproducir un efecto de sonido local a volumen máximo',
+    'audio.tts': 'sintetizar el mensaje en voz con TTS',
+    'system.keypress': 'simular una combinación de teclas a nivel de Windows',
+    'system.launch_app': 'abrir o lanzar una aplicación de escritorio',
+    'music.add_queue': 'empujar una solicitud musical a la cola de Spotify',
+    'overlay.alert': 'disparar un widget visual de alerta en los overlays de Chatich',
+    'hw.hue_color': 'cambiar agresivamente el color de la iluminación Philips Hue'
+  };
+
+  let currentRuleCache = null;
+  const savedRules = [];
+
+  // Update builder logic real-time
+  function updateBuilder() {
+    const trig = document.getElementById('triggerSelect').value;
+    const perm = document.getElementById('permSelect').value;
+    const amt = parseInt(document.getElementById('amountInput').value) || 0;
+    const cool = parseInt(document.getElementById('cooldownInput').value) || 0;
+    const act = document.getElementById('actionSelect').value;
+
+    let sentence = `Cuando <strong>${triggerMap[trig]}</strong>`;
+    if (perm !== 'all') {
+      sentence += ` y su rol sea <strong>${permMap[perm]}</strong>`;
+    }
+    if (amt > 0) {
+      sentence += ` (con un piso mínimo numérico de ${amt})`;
+    }
+    sentence += `, el motor se encargará de <strong>${actionMap[act]}</strong>`;
+    if (cool > 0) {
+      sentence += `, aplicando <strong>${cool} segundos</strong> de espera obligatoria (cooldown) antes de permitirse otra vez`;
+    }
+    sentence += `.`;
+
+    document.getElementById('previewSentence').innerHTML = sentence;
+
+    const ruleObj = {
+      id: "rule_" + Math.random().toString(36).substring(2,10),
+      trigger: trig,
+      conditions: [],
+      actions: [{ type: act }]
+    };
+    
+    if (perm !== 'all') ruleObj.conditions.push({ type: 'permission', level: perm });
+    if (amt > 0) ruleObj.conditions.push({ type: 'min_amount', value: amt });
+    if (cool > 0) ruleObj.conditions.push({ type: 'cooldown', seconds: cool });
+
+    document.getElementById('previewJson').textContent = JSON.stringify(ruleObj, null, 2);
+    currentRuleCache = ruleObj;
+  }
+
+  function copyJson() {
+    const jsonStr = document.getElementById('previewJson').textContent;
+    navigator.clipboard.writeText(jsonStr).then(() => {
+      alert('JSON copiado exitosamente al portapapeles. Listo para integrarse a Rust.');
+    }).catch(err => {
+      console.error('Failed to copy text: ', err);
+    });
+  }
+
+  function addRule() {
+    if (!currentRuleCache) return;
+    savedRules.push(currentRuleCache);
+    renderRules();
+  }
+
+  function renderRules() {
+    const list = document.getElementById('activeRulesList');
+    list.innerHTML = '';
+    
+    if (savedRules.length === 0) {
+      list.innerHTML = '<div class="rule-item"><span style="color:var(--muted)">No hay reglas guardadas actualmente en el entorno en vivo.</span></div>';
+      return;
+    }
+    
+    savedRules.forEach((ruleItem, idx) => {
+      const div = document.createElement('div');
+      div.className = 'rule-item';
+      div.innerHTML = `
+        <div>
+          <div class="rule-item-title">${triggerMap[ruleItem.trigger]} ➔ ${actionMap[ruleItem.actions[0].type]}</div>
+          <div style="font-size:0.8rem;color:var(--muted)">Id: ${ruleItem.id} | ${ruleItem.conditions.length} condiciones de filtro evaluadas.</div>
+        </div>
+        <button class="btn btn-secondary" style="padding:0.35rem 0.85rem" onclick="removeRule(${idx})">Eliminar</button>
+      `;
+      list.appendChild(div);
+    });
+  }
+
+  function removeRule(idx) {
+    savedRules.splice(idx, 1);
+    renderRules();
+  }
+
+  function simulateEvent() {
+    const logContainer = document.getElementById('simulationLog');
+    const timeStamp = new Date().toLocaleTimeString();
+    
+    const triggers = Object.keys(triggerMap);
+    const randomTrigger = triggers[Math.floor(Math.random() * triggers.length)];
+    const mockUsers = ['matias_dev', 'xX_slayer_Xx', 'mod_goku', 'random_chatter_99'];
+    const mockUser = mockUsers[Math.floor(Math.random() * mockUsers.length)];
+    
+    let htmlOutput = `<div class="log-entry"><span class="log-time">[${timeStamp}]</span> [BUS] Evento crudo ingresado: <strong>${randomTrigger}</strong> provisto por el usuario <em>${mockUser}</em>.<br>`;
+    
+    let rulesFired = 0;
+    
+    savedRules.forEach(rule => {
+      if (rule.trigger === randomTrigger) {
+        // Pseudo-aleatorización para la simulación del paso de condiciones lógicas
+        const conditionsPassed = Math.random() > 0.35; // 65% probabilidad de éxito en el mock
+        
+        if (conditionsPassed) {
+          htmlOutput += `<span class="log-success">&nbsp;&nbsp;✔ El motor hizo MATCH con [${rule.id}]. Aprobado. Despachando ActionTask: <code>${rule.actions[0].type}</code> hacia ThreadPool.</span><br>`;
+          rulesFired++;
+        } else {
+          htmlOutput += `<span class="log-fail">&nbsp;&nbsp;✖ Regla [${rule.id}] hizo match de evento, pero falló en la etapa de CONDICIONES (Bloqueado por cooldown o jerarquía de permisos). Acción denegada.</span><br>`;
+        }
+      }
+    });
+
+    if (savedRules.length === 0) {
+      htmlOutput += `<span class="log-fail">&nbsp;&nbsp;✖ Evaluador vacío. Ninguna regla cargada en el Heap. Motor ignorando evento por defecto.</span>`;
+    } else if (rulesFired === 0 && savedRules.length > 0) {
+      // Check if it was a mismatch of trigger or just failed conditions
+      const hasTriggerMatch = savedRules.some(r => r.trigger === randomTrigger);
+      if (!hasTriggerMatch) {
+         htmlOutput += `<span style="color:var(--muted)">&nbsp;&nbsp;- Ninguna regla está suscripta al trigger [${randomTrigger}]. Evento descartado silenciosamente.</span>`;
+      }
+    }
+
+    htmlOutput += `</div>`;
+    logContainer.innerHTML = htmlOutput + logContainer.innerHTML;
+  }
+
+  function clearLogs() {
+    document.getElementById('simulationLog').innerHTML = '';
+  }
+
+  // Initialization call to populate initial state
+  updateBuilder();
+</script>
+
+</body>
+</html>
