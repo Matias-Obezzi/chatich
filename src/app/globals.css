@@ -61,3 +61,15 @@
     --island-muted: var(--surface);
   }
 }
+/* Desplazamiento de las filas de texto de fondo de las pantallas de pausa.
+   Va en CSS y no en framer-motion por dos razones: la duración cambia en vivo al mover
+   el slider (una animación infinita de motion no se reinicia sola), y motion pisaba el
+   transform 3D de la fila al escribir el suyo. */
+@keyframes bg-text-scroll-left {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@keyframes bg-text-scroll-right {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0); }
+}

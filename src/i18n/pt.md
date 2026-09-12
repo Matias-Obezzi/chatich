@@ -65,6 +65,26 @@ Chatich é uma aplicação web que exibe mensagens de chat ao vivo dos canais da
   }
   ```
 
+<a id="spotify-obs"></a>
+
+## Conectar o Spotify no OBS
+
+O overlay de música mostra o que você está ouvindo no Spotify. A autorização fica guardada no navegador interno do OBS, então **é preciso fazê-la pelo OBS**: entrar pelo Chrome não funciona, porque o OBS usa o próprio armazenamento.
+
+Só precisa ser feito uma vez:
+
+1. Monte seu overlay no builder de música e copie a URL.
+2. No OBS, adicione uma fonte do tipo **Navegador** e cole a URL. Defina largura 1920 e altura 1080.
+3. A fonte vai mostrar o aviso **"Spotify sin conectar"**.
+4. Clique com o botão direito na fonte e escolha **Interagir**. Abre uma janela onde você pode usar o overlay como se fosse um navegador.
+5. Nessa janela, clique em **Conectar con Spotify**. O login do Spotify abre ali dentro.
+6. Faça login e aceite as permissões. O Chatich só pede para ler o que você está ouvindo.
+7. Quando aparecer a confirmação, feche a janela de Interagir. O overlay já mostra a música.
+
+**Atenção:** a autorização vive no cache dessa fonte de navegador. Se você clicar com o botão direito e escolher "Atualizar cache da página atual", ou se apagar e recriar a fonte, ela se perde e é preciso repetir os passos. Mover a fonte entre cenas ou reiniciar o OBS não afeta.
+
+Se o overlay parar de mostrar a música de repente, o mais provável é que esse cache tenha sido limpo: abra Interagir de novo e reconecte.
+
 ## Solução de problemas
 
 - Se você ver "Loading..." por muito tempo, verifique sua conexão de internet.

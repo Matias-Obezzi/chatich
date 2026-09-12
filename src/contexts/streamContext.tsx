@@ -69,6 +69,18 @@ export const StreamProvider = ({ children }: { children: React.ReactNode }) => {
       if (event.type === "chat.clear") {
         setMessages((prev) => prev.filter((msg) => msg.platform !== event.platform));
       }
+
+      // Un ban o timeout borra retroactivamente todo el historial del usuario, así que sus
+      // mensajes tienen que salir de pantalla igual que con un chat.delete.
+      if (event.type === "mod.ban") {
+        const banned = event.targetUsername.toLowerCase();
+        setMessages((prev) =>
+          prev.filter(
+            (msg) =>
+              msg.platform !== event.platform || msg.actor.username.toLowerCase() !== banned
+          )
+        );
+      }
     });
 
     return unsub;

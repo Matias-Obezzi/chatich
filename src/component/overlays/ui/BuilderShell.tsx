@@ -93,7 +93,7 @@ export default function BuilderShell({
 
     if (isDesktop) {
         return (
-            <div className={`w-full flex flex-col lg:flex-row items-start gap-6 max-w-7xl mx-auto ${className ?? ''}`}>
+            <div className={`w-full flex flex-col lg:flex-row items-start gap-6 ${className ?? ''}`}>
                 {/* Panel de configuración */}
                 <div className="w-full lg:w-1/3 bg-surface border border-border rounded-xl p-6 flex flex-col gap-6">
                     <div className="space-y-6 flex-grow">{children}</div>
@@ -114,7 +114,7 @@ export default function BuilderShell({
     }
 
     return (
-        <div className={`w-full max-w-7xl mx-auto pb-20 ${className ?? ''}`}>
+        <div className={`w-full pb-20 ${className ?? ''}`}>
             {/* Vista previa a pantalla completa: la configuración se abre desde la barra de abajo. */}
             <div className="w-full rounded-xl border border-border overflow-hidden flex flex-col h-[calc(100dvh-13rem)] min-h-[360px]">
                 {previewToolbar}

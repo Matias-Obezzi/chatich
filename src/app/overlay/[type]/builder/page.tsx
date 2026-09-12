@@ -10,16 +10,19 @@ const BUILDER_LINKS = [
     { type: 'chat', label: 'Chat' },
     { type: 'alerts', label: 'Alertas' },
     { type: 'goals', label: 'Metas' },
-    { type: 'emotes', label: 'Emotes' }
+    { type: 'emotes', label: 'Emotes' },
+    { type: 'polls', label: 'Encuestas' },
+    { type: 'status', label: 'Estado' },
+    { type: 'music', label: 'Música' },
+    { type: 'screen', label: 'Pantalla' },
+    { type: 'debug', label: 'Debug' }
 ];
 
-function BuilderTabs({ overlayType, name, description }: { overlayType: string; name?: string; description?: string }) {
+function BuilderTabs({ overlayType }: { overlayType: string }) {
     return (
         <div className="bg-surface/60 border-b border-border backdrop-blur-sm">
-            <div className="max-w-7xl mx-auto px-6 py-2.5 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-4 min-w-0">
-                    <span className="font-chakra text-muted font-bold text-sm hidden sm:inline">OVERLAYS:</span>
-                    <div className="flex gap-2 overflow-x-auto">
+            <div className="max-w-7xl mx-auto px-6 py-2.5">
+                <div className="flex gap-2 overflow-x-auto">
                         {BUILDER_LINKS.map(link => {
                             const isActive = link.type === overlayType;
                             return (
@@ -36,13 +39,7 @@ function BuilderTabs({ overlayType, name, description }: { overlayType: string; 
                                 </Link>
                             );
                         })}
-                    </div>
                 </div>
-                {name && (
-                    <div className="text-sm text-muted hidden lg:block truncate">
-                        <span className="font-semibold text-text/90">{name}</span> — {description}
-                    </div>
-                )}
             </div>
         </div>
     );
@@ -53,7 +50,7 @@ function BuilderNotice({ overlayType, tone, title, message }: { overlayType: str
     return (
         <SiteLayout
             beforeMain={<BuilderTabs overlayType={overlayType} />}
-            mainClassName="flex-grow flex flex-col items-center justify-center gap-4 p-6"
+            mainClassName="w-full max-w-7xl mx-auto px-6 py-6 flex-grow flex flex-col items-center justify-center gap-4"
         >
             <div className={`bg-surface p-6 rounded-xl border ${toneClass} text-center max-w-md`}>
                 <h2 className="text-xl font-chakra font-bold mb-2">{title}</h2>
@@ -98,9 +95,14 @@ export default function BuilderPage(props: { params: Promise<{ type: string }> }
 
     return (
         <SiteLayout
-            beforeMain={<BuilderTabs overlayType={overlayType} name={overlayDef.name} description={overlayDef.description} />}
-            mainClassName="p-4 md:p-6 flex-grow flex flex-col"
+            beforeMain={<BuilderTabs overlayType={overlayType} />}
+            mainClassName="w-full max-w-7xl mx-auto px-6 py-6 flex-grow flex flex-col"
         >
+            <header className="w-full mb-5">
+                <h1 className="font-chakra text-2xl font-bold text-text">{overlayDef.name}</h1>
+                <p className="text-sm text-muted mt-1 max-w-2xl">{overlayDef.description}</p>
+            </header>
+
             <Suspense fallback={<div className="flex items-center justify-center h-full text-muted">Cargando builder...</div>}>
                 <StreamProvider>
                     <BuilderComponent />

@@ -1,9 +1,10 @@
 import { OverlayDefinition } from '../registry';
+import { OVERLAY_CATALOG } from '../catalog';
 import DebugOverlay from './DebugOverlay';
+import DebugBuilder from './DebugBuilder';
 
 export const debugOverlayDef: OverlayDefinition = {
-    id: 'debug',
-    name: 'Debug Tool',
-    description: 'Utility overlay to emit synthetic events',
-    component: DebugOverlay
+  ...OVERLAY_CATALOG.debug,
+    component: DebugOverlay,
+    builder: DebugBuilder
 };

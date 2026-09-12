@@ -1,11 +1,10 @@
 import { OverlayDefinition } from '../registry';
+import { OVERLAY_CATALOG } from '../catalog';
 import AlertsOverlay from './AlertsOverlay';
 import AlertsBuilder from './AlertsBuilder';
 
 export const alertsOverlayDef: OverlayDefinition = {
-    id: 'alerts',
-    name: 'Alerts',
-    description: 'Displays stream alerts with a queue system',
+  ...OVERLAY_CATALOG.alerts,
     component: AlertsOverlay,
     builder: AlertsBuilder,
     params: [
