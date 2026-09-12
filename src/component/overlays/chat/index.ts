@@ -1,11 +1,10 @@
 import { ChatViewClient } from '@/component/chat';
 import type { OverlayDefinition } from '../registry';
+import { OVERLAY_CATALOG } from '../catalog';
 import ChatBuilder from './ChatBuilder';
 
 export const chatOverlayDef: OverlayDefinition = {
-  id: 'chat',
-  name: 'Chat Overlay',
-  description: 'Muestra el chat en vivo con soporte para múltiples plataformas.',
+  ...OVERLAY_CATALOG.chat,
   component: ChatViewClient,
   builder: ChatBuilder,
 };

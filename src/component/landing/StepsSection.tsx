@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { Reveal } from '@/component/ui/reveal';
 import { useTranslations } from './i18n';
 
 export default function StepsSection({ lang }: { lang: string }) {
@@ -8,12 +9,12 @@ export default function StepsSection({ lang }: { lang: string }) {
     return (
         <section className="py-24 bg-bg border-b border-border">
             <div className="max-w-6xl mx-auto px-4">
-                <div className="text-center mb-16">
+                <Reveal className="text-center mb-16">
                     <h2 className="font-chakra text-4xl md:text-5xl font-bold mb-4">{t.stepsTitle}</h2>
                     <p className="text-xl text-muted">{t.stepsDesc}</p>
-                </div>
+                </Reveal>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
+                <Reveal stagger={120} className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
                     {/* Connecting line for desktop */}
                     <div className="hidden md:block absolute top-12 left-1/6 right-1/6 h-0.5 bg-surface-2 z-0"></div>
                     
@@ -40,7 +41,7 @@ export default function StepsSection({ lang }: { lang: string }) {
                         <h3 className="text-2xl font-bold mb-3 font-chakra">{t.step3Title}</h3>
                         <p className="text-muted">{t.step3Desc}</p>
                     </div>
-                </div>
+                </Reveal>
             </div>
         </section>
     );

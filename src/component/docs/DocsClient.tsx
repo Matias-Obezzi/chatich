@@ -99,6 +99,12 @@ export function DocsClient({ html, headings, lang }: DocsClientProps) {
           line-height: 1.7;
           font-size: 1.05rem;
         }
+        /* Anclas explícitas del markdown (ej: #spotify-obs): sin esto el navbar
+           sticky tapa el título al saltar. */
+        .prose-content a[id]:empty {
+          display: block;
+          scroll-margin-top: 100px;
+        }
         .prose-content h1, .prose-content h2, .prose-content h3 {
           font-family: var(--font-chakra), sans-serif;
           color: #fff;

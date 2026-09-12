@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { Fx, scanlines, chromatic } from '@uiness/fx';
 import { useScrollProgress } from '@uiness/scroll';
 import { useTranslations } from './i18n';
@@ -47,14 +48,18 @@ export default function HeroSection({ lang }: { lang: string }) {
                 </p>
                 
                 <div className="flex flex-col sm:flex-row gap-4">
-                    <button onClick={() => {
-                        document.getElementById("builder")?.scrollIntoView({ behavior: 'smooth' });
-                    }} className="bg-neon text-bg px-10 py-4 rounded-xl font-bold hover:bg-neon-2 transition-colors text-lg">
+                    <Link
+                        href="/overlay/chat/builder"
+                        className="bg-neon text-bg px-10 py-4 rounded-xl font-bold hover:bg-neon-2 transition-colors text-lg flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-neon/50"
+                    >
                         {t.buildBtn}
-                    </button>
-                    <a href="/docs" className="border border-border bg-surface-2/50 backdrop-blur text-text px-10 py-4 rounded-xl font-bold hover:bg-surface transition-colors text-lg flex items-center justify-center">
+                    </Link>
+                    <Link
+                        href="/docs"
+                        className="border border-border bg-surface-2/50 backdrop-blur text-text px-10 py-4 rounded-xl font-bold hover:bg-surface transition-colors text-lg flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-neon/50"
+                    >
                         {t.docsBtn}
-                    </a>
+                    </Link>
                 </div>
             </div>
         </section>

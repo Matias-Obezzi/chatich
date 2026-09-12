@@ -4,6 +4,9 @@ import React from 'react';
 import { useStream } from '@/contexts/streamContext';
 import { StreamEvent, EventActor } from '@/lib/events/types';
 
+/** Usuario fijo para las pruebas de moderación: hace falta que el ban apunte a alguien conocido. */
+const MOD_TARGET = 'mod_target';
+
 export default function DebugPanel() {
     const { bus } = useStream();
 
@@ -56,6 +59,27 @@ export default function DebugPanel() {
             <button className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded" onClick={() => emitEvent({ type: 'host', actor: createActor(), viewers: 42 })}>Simulate Host</button>
             <button className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded" onClick={() => emitEvent({ type: 'superchat', actor: createActor(), amount: 10, currency: 'USD', tierColor: '#FFD700', text: 'Great content!' })}>Simulate Superchat</button>
             <button className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded" onClick={() => emitEvent({ type: 'member.new', actor: createActor(), tierName: 'Gold Member' })}>Simulate New Member</button>
+
+            {/* Chat y moderación: sirven para comprobar que los mensajes salen de pantalla
+                cuando un mod los borra, limpia el chat o banea a alguien. */}
+            <button
+                className="bg-slate-600 hover:bg-slate-700 px-3 py-1 rounded"
+                onClick={() => emitEvent({ type: 'chat.message', actor: { username: MOD_TARGET, displayName: MOD_TARGET }, text: 'Mensaje de prueba de ' + MOD_TARGET })}
+            >
+                Simulate Message ({MOD_TARGET})
+            </button>
+            <button
+                className="bg-slate-600 hover:bg-slate-700 px-3 py-1 rounded"
+                onClick={() => emitEvent({ type: 'mod.ban', targetUsername: MOD_TARGET, permanent: true })}
+            >
+                Simulate Ban ({MOD_TARGET})
+            </button>
+            <button
+                className="bg-slate-600 hover:bg-slate-700 px-3 py-1 rounded"
+                onClick={() => emitEvent({ type: 'chat.clear' })}
+            >
+                Simulate Clear Chat
+            </button>
         </div>
     );
 }

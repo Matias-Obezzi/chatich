@@ -1,11 +1,10 @@
 import { OverlayDefinition } from '../registry';
+import { OVERLAY_CATALOG } from '../catalog';
 import EmotesOverlay from './EmotesOverlay';
 import EmotesBuilder from './EmotesBuilder';
 
 export const emotesOverlayDef: OverlayDefinition = {
-  id: 'emotes',
-  name: 'Emote Rain',
-  description: 'Lluvia de emotes en pantalla ante eventos y mensajes',
+  ...OVERLAY_CATALOG.emotes,
   component: EmotesOverlay,
   builder: EmotesBuilder,
   params: [
