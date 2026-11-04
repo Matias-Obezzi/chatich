@@ -18,7 +18,11 @@ export async function createClient(channelName: string) {
       if (!channelInfo) {
         throw new Error("Unable to fetch channel data");
       }
-      socket = createWebSocket();
+      socket = await createWebSocket();
+      if (isClosed) {
+        socket.close();
+        return;
+      }
 
       socket.onopen = () => {
         reconnectAttempts = 0;
